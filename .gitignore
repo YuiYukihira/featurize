@@ -1,0 +1,13 @@
+
+# nix
+/result
+/.data
+
+# nixago: ignore-linked-files
+/mailslurper.json
+/kratos.yaml
+/hydra.yaml
+/.conform.yaml
+/.prettierrc
+/lefthook.yml
+/treefmt.toml
