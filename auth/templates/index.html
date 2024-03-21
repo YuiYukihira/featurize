@@ -1,4 +1,6 @@
-{% include "header.html" %}
-<h1 class="text-3xl">Hello world!</h1>
-{% include "footer.html" %}
+{% extends "base.html" %}
+{% block title %}Home{% endblock title %}
+{% block content %}
+<h1 class="text-3xl">Home</h1>
 <a href="/login">Log in</a> or <a href="/registration">Register</a>
+{% endblock content %}

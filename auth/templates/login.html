@@ -1,9 +1,20 @@
-{% include "header.html" %}
-<h1 class="text-3xl">Log in to Featurize!</h1>
-<form class="flex flex-col space-y-2" action="http://localhost:4433/self-service/login?flow={{flow}}" method="post">
-    <input class="border rounded" type="text" placeholder="Username" />
-    <input class="border rounded" type="text" placeholder="Password" />
-    <input type="hidden" value="{{csrf_token}}" />
-    <button class="border rounded" type="submit">Log in</button>
-</form>
-{% include "footer.html" %}
+{% extends "base.html" %}
+{% block title %}Log In{% endblock title %}
+{% block content %}
+    <h1 class="text-3xl">Register for Featurize!</h1>
+    <form class="flex flex-col space-y-2" action="{{flow.ui.action}}" method="{{flow.ui.method}}">
+        {% for node in flow.ui.nodes %}
+            {% for msg in node.messages %}
+                <p>{{msg.text}}</p>
+            {% endfor %}
+            <{{node.type}}
+                class="border rounded"
+                name="{{node.attributes.name}}"
+                placeholder="{{node.attributes.name}}"
+                {% if node.attributes.disabled %} disabled {% endif %}
+                type="{{node.attributes.type}}"
+                {% if node.attributes.value %} value="{{node.attributes.value}}" {% endif %}
+            />
+        {% endfor %}
+    </form>
+{% endblock content %}

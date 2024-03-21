@@ -1,5 +1,7 @@
-{% include "header.html" %}
-<h1 class="text-3xl">An error has occured!</h1>
-<h2 class="text-xl">{{msg}}</h2>
-<p>{{reason}}</p>
-{% include "footer.html" %}
+{% extends "base.html" %}
+{% block title %}Error{% endblock title %}
+{% block content %}
+    <h1 class="text-3xl">An error has occured!</h1>
+    <h2 class="text-xl">{{msg}}</h2>
+    <p>{{reason}}</p>
+{% endblock content %}

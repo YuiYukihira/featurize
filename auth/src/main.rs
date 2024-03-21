@@ -25,7 +25,9 @@ pub struct Flow {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct FlowUi {
-    nodes: Vec<FlowUiNode>
+    nodes: Vec<FlowUiNode>,
+    action: String,
+    method: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -126,16 +128,7 @@ async fn register(tera: web::Data<Tera>, req: actix_web::HttpRequest, query: web
                 .await
                 .unwrap();
 
-            let csrf_token = flow
-                .ui
-                .nodes
-                .iter()
-                .find(|n| n.attributes.name == Some("csrf_token".to_string()))
-                .unwrap()
-                .attributes.value.clone().unwrap();
-
             let mut context = tera::Context::new();
-            context.insert("csrf_token", &csrf_token);
             context.insert("flow", &flow);
 
             let html = tera.render("register.html", &context).unwrap();
@@ -199,17 +192,8 @@ async fn login(tera: web::Data<Tera>, req: actix_web::HttpRequest, query: web::Q
                 .await
                 .unwrap();
 
-            let csrf_token = flow
-                .ui
-                .nodes
-                .into_iter()
-                .find(|n| n.attributes.name == Some("csrf_token".to_string()))
-                .unwrap()
-                .attributes.value.unwrap();
-
             let mut context = tera::Context::new();
-            context.insert("csrf_token", &csrf_token);
-            context.insert("flow", &flow_id);
+            context.insert("flow", dbg!(&flow));
 
             let html = tera.render("login.html", &context).unwrap();
             HttpResponse::Ok().body(html)
