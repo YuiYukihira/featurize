@@ -1,0 +1,9 @@
+{% include "header.html" %}
+<h1 class="text-3xl">Log in to Featurize!</h1>
+<form class="flex flex-col space-y-2" action="http://localhost:4433/self-service/login?flow={{flow}}" method="post">
+    <input class="border rounded" type="text" placeholder="Username" />
+    <input class="border rounded" type="text" placeholder="Password" />
+    <input type="hidden" value="{{csrf_token}}" />
+    <button class="border rounded" type="submit">Log in</button>
+</form>
+{% include "footer.html" %}

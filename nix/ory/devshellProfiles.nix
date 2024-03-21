@@ -96,8 +96,12 @@
     with lib;
     let
       cfg = config.services.kratos;
+      dbHost =
+        if cfg.db.host == "nix-service" then "localhost" else cfg.db.host;
       start-command = pkgs.writeShellScriptBin "start-kratos" ''
-        ${cfg.package}/bin/kratos serve all --config ${cfg.config.location}
+        export DSN="postgres://${cfg.db.user.name}:${cfg.db.user.password}@${dbHost}:${cfg.db.port}/${cfg.db.name}?sslmode=disable&max_conns=20&max_idle_conns=4"
+        ${cfg.package}/bin/kratos migrate sql --config ${cfg.config.location} -e --yes
+        ${cfg.package}/bin/kratos serve all --config ${cfg.config.location} --dev --watch-courier
       '';
 
       configFile = {
@@ -114,7 +118,7 @@
                       cfg.mail.host;
                   port = toString cfg.mail.port;
                 in
-                "smtps://${cfg.mail.user.name}:${cfg.mail.user.password}@${host}:${port}/?skip_ssl_verify=true";
+                "smtp://${cfg.mail.user.name}:${cfg.mail.user.password}@${host}:${port}/?disable_starttls=true&skip_ssl_verify=true";
             };
           };
         };
@@ -207,6 +211,8 @@
             GRANT ALL ON SCHEMA public TO ${cfg.db.user.name};
             GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO ${cfg.db.user.name};
             GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO ${cfg.db.user.name};
+            CREATE EXTENSION pg_trgm;
+            CREATE EXTENSION IF NOT EXISTS btree_gin;
           '';
         }];
 

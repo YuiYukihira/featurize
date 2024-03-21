@@ -18,6 +18,7 @@
           dbDatabase = ".data/mailslurper.db";
           dbUserName = "";
           dbPassword = "";
+          maxWorkers = 1000;
         };
       };
       start-command = pkgs.writeShellScriptBin "start-mailslurper" ''

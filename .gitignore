@@ -3,6 +3,9 @@
 /result
 /.data
 
+# rust
+target/
+
 # nixago: ignore-linked-files
 /mailslurper.json
 /kratos.yaml

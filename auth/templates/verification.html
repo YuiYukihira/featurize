@@ -1,0 +1,38 @@
+{% include "header.html" %}
+<h1 class="text-3xl">Verify your account!</h1>
+{% for msg in flow.ui.messages %}
+<p>{{msg.text}}</p>
+{% endfor %}
+{% if flow.state == "passed_challenge" %}
+    {% for node in flow.ui.nodes %}
+        {% if node.type == "a" %}
+            <a href="{{flow.ui.action}}">Return to home</a>
+        {% else %}
+            <{{node.type}}
+                class="border rounded"
+                name="{{node.attributes.name}}"
+                placeholder="{{node.attributes.name}}"
+                {% if node.attributes.disabled %} disabled {% endif %}
+                type="{{node.attributes.type}}"
+                {% if node.attributes.value %} value="{{node.attributes.value}}" {% endif %}
+                />
+        {% endif %}
+    {% endfor %}
+{% else %}
+<form class="flex flex-col space-y-2" action="{{flow.ui.action}}" method="{{flow.ui.method}}">
+    {% for node in flow.ui.nodes %}
+        {% for msg in node.messages %}
+            <p>{{msg.text}}</p>
+        {% endfor %}
+        <{{node.type}}
+            class="border rounded"
+            name="{{node.attributes.name}}"
+            placeholder="{{node.attributes.name}}"
+            {% if node.attributes.disabled %} disabled {% endif %}
+            type="{{node.attributes.type}}"
+            {% if node.attributes.value %} value="{{node.attributes.value}}" {% endif %}
+            />
+    {% endfor %}
+</form>
+{% endif %}
+{% include "footer.html" %}

@@ -10,6 +10,8 @@ l.mapAttrs (_: std.lib.dev.mkShell) {
     imports = [
       std.std.devshellProfiles.default
       inputs.helpers.devshellProfiles.base
+      inputs.helpers.devshellProfiles.language.rust
+      inputs.helpers.devshellProfiles.language.c
       inputs.helpers.devshellProfiles.services.minio
       inputs.helpers.devshellProfiles.services.postgres
       inputs.cells.ory.devshellProfiles.hydra
@@ -17,7 +19,40 @@ l.mapAttrs (_: std.lib.dev.mkShell) {
       inputs.cells.mailslurper.devshellProfiles.mailslurper
     ];
 
-    commands = [ ];
+    language.rust.packageSet = inputs.cells.rust.toolchain.rust;
+
+    commands = [
+      { package = nixpkgs.deno; }
+      { package = nixpkgs.tailwindcss; }
+      {
+        package =
+          let
+            cargoWatch = nixpkgs.writeShellScriptBin "cargo-watch" ''
+              sigint_handler()
+              {
+                kill $PID
+                exit
+              }
+
+              trap sigint_handler SIGINT
+
+              while true; do
+                ${inputs.cells.rust.toolchain.rust}/bin/cargo run &
+                PID=$!
+                ${nixpkgs.inotify-tools}/bin/inotifywait -e modify -e move -e create -e delete -e attrib -r src public templates
+                kill $PID
+              done
+            '';
+            procfile = nixpkgs.writeText "Procfile.watch" ''
+              tailwind: ${nixpkgs.tailwindcss}/bin/tailwindcss -i ./src/input.css -o ./public/output.css --watch
+              auth: PORT=3000 ${cargoWatch}/bin/cargo-watch
+            '';
+          in
+          nixpkgs.writeShellScriptBin "watch" ''
+            ${nixpkgs.honcho}/bin/honcho start -f ${procfile} -d "$PRJ_ROOT/auth"
+          '';
+      }
+    ];
 
     services = {
       mailslurper = { enable = true; };
@@ -48,9 +83,9 @@ l.mapAttrs (_: std.lib.dev.mkShell) {
       };
       kratos = {
         enable = true;
+        mail.port = 2525;
         config.data = {
           version = "v0.13.0";
-          dsn = "memory";
           serve = {
             public = {
               base_url = "http://localhost:4433/";
@@ -76,37 +111,37 @@ l.mapAttrs (_: std.lib.dev.mkShell) {
               code = { enabled = true; };
             };
             flows = {
-              error = { ui_url = "http://localhost:4455/error"; };
+              error = { ui_url = "http://localhost:3000/error"; };
               settings = {
-                ui_url = "http://localhost:4455/settings";
+                ui_url = "http://localhost:3000/settings";
                 privileged_session_max_age = "15m";
                 required_aal = "highest_available";
               };
               recovery = {
                 enabled = true;
-                ui_url = "http://localhost:4455/recovery";
+                ui_url = "http://localhost:3000/recovery";
                 use = "code";
               };
               verification = {
                 enabled = true;
-                ui_url = "http://localhost:4455/verification";
+                ui_url = "http://localhost:3000/verification";
                 use = "code";
                 after = {
-                  default_browser_return_url = "http://localhost:4455/";
+                  default_browser_return_url = "http://localhost:3000/";
                 };
               };
               logout = {
                 after = {
-                  default_browser_return_url = "http://localhost:4455/login";
+                  default_browser_return_url = "http://localhost:3000/login";
                 };
               };
               login = {
-                ui_url = "http://localhost:4455/login";
+                ui_url = "http://localhost:3000/login";
                 lifespan = "10m";
               };
               registration = {
                 lifespan = "10m";
-                ui_url = "http://localhost:4455/registration";
+                ui_url = "http://localhost:3000/registration";
                 after = {
                   password = {
                     hooks = [
@@ -137,7 +172,7 @@ l.mapAttrs (_: std.lib.dev.mkShell) {
             schemas = [{
               id = "default";
               url =
-                "https://github.com/ory/kratos/raw/master/contrib/quickstart/kratos/email-password/identity.schema.json";
+                "https://raw.githubusercontent.com/ory/kratos/master/contrib/quickstart/kratos/email-password/identity.schema.json";
             }];
           };
           feature_flags = { use_continue_with_transitions = true; };

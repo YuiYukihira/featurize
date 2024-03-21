@@ -1,0 +1,17 @@
+{% include "header.html" %}
+<h1 class="text-3xl">Register for Featurize!</h1>
+<form class="flex flex-col space-y-2" action="http://localhost:4433/self-service/registration?flow={{flow.id}}" method="post">
+    {% for node in flow.ui.nodes %}
+        {% for msg in node.messages %}
+            <p>{{msg.text}}</p>
+        {% endfor %}
+        <{{node.type}}
+            class="border rounded"
+            name="{{node.attributes.name}}"
+            placeholder="{{node.attributes.name}}"
+            {% if node.attributes.disabled %} disabled {% endif %}
+            type="{{node.attributes.type}}"
+            {% if node.attributes.value %} value="{{node.attributes.value}}" {% endif %} />
+    {% endfor %}
+</form>
+{% include "footer.html" %}
