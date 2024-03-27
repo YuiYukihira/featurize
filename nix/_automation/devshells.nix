@@ -94,9 +94,9 @@ l.mapAttrs (_: std.lib.dev.mkShell) {
             admin = { base_url = "http://localhost:4434/"; };
           };
           selfservice = {
-            default_browser_return_url = "http://localhost:4455/";
+            default_browser_return_url = "http://localhost:3000/";
             allowed_return_urls = [
-              "http://localhost:4455"
+              "http://localhost:3000"
               "http://localhost:19006/Callback"
               "exp://localhost:8081/--/Callback"
             ];
