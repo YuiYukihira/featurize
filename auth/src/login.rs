@@ -4,12 +4,13 @@ use tera::Tera;
 
 use crate::{redirect, AuthConfig, Flow};
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 struct LoginQuery {
     flow: Option<String>
 }
 
 
+#[tracing::instrument]
 #[get("/login")]
 pub async fn route(tera: web::Data<Tera>, auth_config: web::Data<AuthConfig>, req: actix_web::HttpRequest, query: web::Query<LoginQuery>) -> impl Responder {
     match &query.flow {

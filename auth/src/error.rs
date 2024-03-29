@@ -6,7 +6,7 @@ use crate::AuthConfig;
 
 
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct ErrorQuery {
     id: String,
 }
@@ -23,6 +23,7 @@ pub struct ErrorMessage {
     reason: String,
 }
 
+#[tracing::instrument]
 #[get("/error")]
 pub async fn route(tera: web::Data<Tera>, auth_config: web::Data<AuthConfig>, query: web::Query<ErrorQuery>) -> impl Responder {
     let client = reqwest::Client::new();

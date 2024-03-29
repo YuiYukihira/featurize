@@ -5,11 +5,12 @@ use tera::Tera;
 use crate::{redirect, AuthConfig, Flow};
 
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct RegisterQuery {
     flow: Option<String>
 }
 
+#[tracing::instrument]
 #[get("/registration")]
 pub async fn route(tera: web::Data<Tera>, auth_config: web::Data<AuthConfig>, req: actix_web::HttpRequest, query: web::Query<RegisterQuery>) -> impl Responder {
     match &query.flow {

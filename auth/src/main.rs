@@ -3,6 +3,7 @@ use std::env;
 use serde::{Deserialize, Serialize};
 use actix_web::{body::BoxBody, dev::AppConfig, web, App, HttpResponse, HttpServer};
 use tera::Tera;
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 
 mod index;
@@ -60,6 +61,7 @@ pub struct FlowUiNodeAttributes {
     label: Option<FlowUiNodeAttributesLabel>
 }
 
+#[derive(Debug)]
 pub struct AuthConfig {
     domain: String,
 }
@@ -79,6 +81,17 @@ pub fn redirect(s: &str) -> HttpResponse<BoxBody> {
 
 #[actix_web::main]
 async fn main() -> color_eyre::Result<()> {
+    color_eyre::install()?;
+    let _guard = sentry::init(sentry::ClientOptions {
+        traces_sample_rate: 1.0,
+        ..Default::default()
+    });
+
+    tracing_subscriber::registry()
+        .with(tracing_subscriber::fmt::layer())
+        .with(sentry_tracing::layer())
+        .init();
+
     let port = {
         let p = env::var("PORT");
 

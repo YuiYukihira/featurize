@@ -10,6 +10,7 @@ struct LogoutUrlResponse {
     logout_url: String,
 }
 
+#[tracing::instrument]
 #[get("/")]
 pub async fn route(tera: web::Data<Tera>, auth_config: web::Data<AuthConfig>, req: actix_web::HttpRequest) -> impl Responder {
     let cookie = match req
@@ -17,7 +18,6 @@ pub async fn route(tera: web::Data<Tera>, auth_config: web::Data<AuthConfig>, re
         .get("Cookie") {
             Some(cookie) => cookie.to_str().unwrap(),
             None => {
-
                 let context = tera::Context::new();
                 let template_file = "index.html";
                 let html = tera.render(template_file, &context).unwrap();

@@ -6,7 +6,7 @@ use tera::Tera;
 use crate::{redirect, AuthConfig, FlowUiNode};
 
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct VerifyQuery {
     flow: Option<String>
 }
@@ -38,6 +38,7 @@ pub struct VerificationFlowUiMessage {
     r#type: String,
 }
 
+#[tracing::instrument]
 #[get("/verification")]
 pub async fn route(tera: web::Data<Tera>, auth_config: web::Data<AuthConfig>, req: actix_web::HttpRequest, query: web::Query<VerifyQuery>) -> impl Responder {
     match &query.flow {
