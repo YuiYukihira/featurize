@@ -3,23 +3,31 @@ use reqwest::StatusCode;
 use serde::Deserialize;
 use tera::Tera;
 
+use crate::AuthConfig;
+
 #[derive(Deserialize)]
 struct LogoutUrlResponse {
     logout_url: String,
 }
 
 #[get("/")]
-pub async fn route(tera: web::Data<Tera>, req: actix_web::HttpRequest) -> impl Responder {
-    let cookie = req
+pub async fn route(tera: web::Data<Tera>, auth_config: web::Data<AuthConfig>, req: actix_web::HttpRequest) -> impl Responder {
+    let cookie = match req
         .headers()
-        .get("Cookie")
-        .unwrap()
-        .to_str()
-        .unwrap();
+        .get("Cookie") {
+            Some(cookie) => cookie.to_str().unwrap(),
+            None => {
+
+                let context = tera::Context::new();
+                let template_file = "index.html";
+                let html = tera.render(template_file, &context).unwrap();
+                return HttpResponse::Ok().body(html);
+            }
+        };
 
     let client = reqwest::Client::new();
     let res = client
-        .get("http://localhost:4433/session/whoami")
+        .get(auth_config.get_url("session/whoami"))
         .header("Cookie", cookie)
         .send()
         .await
@@ -30,7 +38,7 @@ pub async fn route(tera: web::Data<Tera>, req: actix_web::HttpRequest) -> impl R
 
     if res.status() == StatusCode::OK {
         let logout_url: LogoutUrlResponse = client
-            .get("http://localhost:4433/self-service/logout/browser")
+            .get(auth_config.get_url("self-service/logout/browser"))
             .header("Cookie", cookie)
             .send()
             .await

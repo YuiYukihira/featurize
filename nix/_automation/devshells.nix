@@ -24,6 +24,7 @@ l.mapAttrs (_: std.lib.dev.mkShell) {
     commands = [
       { package = nixpkgs.deno; }
       { package = nixpkgs.tailwindcss; }
+      { package = nixpkgs.flyctl; }
       {
         package =
           let
@@ -185,6 +186,7 @@ l.mapAttrs (_: std.lib.dev.mkShell) {
       (std.lib.dev.mkNixago cell.configs.prettier)
       ((std.lib.dev.mkNixago std.lib.cfg.treefmt) cell.configs.treefmt)
       ((std.lib.dev.mkNixago std.lib.cfg.conform) cell.configs.conform)
+      (std.lib.dev.mkNixago cell.configs.auth-fly)
     ];
   };
 }

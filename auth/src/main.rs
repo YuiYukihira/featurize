@@ -1,7 +1,7 @@
 use std::env;
 
 use serde::{Deserialize, Serialize};
-use actix_web::{body::BoxBody, web, App, HttpResponse, HttpServer};
+use actix_web::{body::BoxBody, dev::AppConfig, web, App, HttpResponse, HttpServer};
 use tera::Tera;
 
 
@@ -60,6 +60,16 @@ pub struct FlowUiNodeAttributes {
     label: Option<FlowUiNodeAttributesLabel>
 }
 
+pub struct AuthConfig {
+    domain: String,
+}
+
+impl AuthConfig {
+    pub fn get_url(&self, p: &str) -> String {
+        format!("{}/{}", self.domain, p)
+    }
+}
+
 pub fn redirect(s: &str) -> HttpResponse<BoxBody> {
     HttpResponse::SeeOther()
         .append_header(("Location", s))
@@ -74,25 +84,29 @@ async fn main() -> color_eyre::Result<()> {
 
         match p {
             Ok(p) => p.parse(),
-            Err(_) => Ok(8080),
+            Err(_) => Ok(80),
         }
     }?;
 
     println!("Starting on: 0.0.0.0:{}", port);
     HttpServer::new(|| {
-        App::new()
-            .app_data(web::Data::new({
-                
+        let auth_domain = env::var("KRATOS_DOMAIN").unwrap();
+        let templates_dir = env::var("TEMPLATES_DIR").unwrap_or("templates".to_string());
+        let public_dir = env::var("PUBLIC_DIR").unwrap_or("public".to_string());
+        println!("TEMPLATES_DIR: {}", templates_dir);
+        println!("PUBLIC_DIR: {}", public_dir);
+        println!("KRATOS_DOMAIN: {}", auth_domain);
 
-                Tera::new("templates/**/*.html").unwrap()
-            }))
+        App::new()
+            .app_data(web::Data::new(Tera::new(&format!("{}/**/*.html", templates_dir)).unwrap()))
+            .app_data(web::Data::new(AuthConfig { domain: auth_domain }))
             .service(index::route)
             .service(registration::route)
             .service(login::route)
             .service(verification::route)
             .service(error::route)
             .service(
-                actix_files::Files::new("/public", "public")
+                actix_files::Files::new("/public", public_dir)
                     .show_files_listing()
                     .use_last_modified(true),
             )

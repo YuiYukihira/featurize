@@ -2,6 +2,8 @@ use actix_web::{get, web, HttpResponseBuilder, Responder};
 use serde::Deserialize;
 use tera::Tera;
 
+use crate::AuthConfig;
+
 
 
 #[derive(Deserialize)]
@@ -22,10 +24,10 @@ pub struct ErrorMessage {
 }
 
 #[get("/error")]
-pub async fn route(tera: web::Data<Tera>, query: web::Query<ErrorQuery>) -> impl Responder {
+pub async fn route(tera: web::Data<Tera>, auth_config: web::Data<AuthConfig>, query: web::Query<ErrorQuery>) -> impl Responder {
     let client = reqwest::Client::new();
     let res = client
-        .get("http://localhost:4433/self-service/errors")
+        .get(auth_config.get_url("self-service/errors"))
         .query(&[("id", &query.id)])
         .send()
         .await

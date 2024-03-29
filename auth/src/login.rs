@@ -2,7 +2,7 @@ use actix_web::{get, web, HttpResponse, Responder};
 use serde::Deserialize;
 use tera::Tera;
 
-use crate::{redirect, Flow};
+use crate::{redirect, AuthConfig, Flow};
 
 #[derive(Deserialize)]
 struct LoginQuery {
@@ -11,17 +11,21 @@ struct LoginQuery {
 
 
 #[get("/login")]
-pub async fn route(tera: web::Data<Tera>, req: actix_web::HttpRequest, query: web::Query<LoginQuery>) -> impl Responder {
+pub async fn route(tera: web::Data<Tera>, auth_config: web::Data<AuthConfig>, req: actix_web::HttpRequest, query: web::Query<LoginQuery>) -> impl Responder {
     match &query.flow {
-        None => redirect("http://localhost:4433/self-service/login/browser"),
+        None => redirect(&auth_config.get_url("self-service/login/browser")),
         Some(flow_id) => {
-            let cookies = req.headers().get("Cookie").unwrap().to_str().unwrap();
-
             let client = reqwest::Client::new();
-            let flow: Flow = client
-                .get("http://localhost:4433/self-service/login/flows")
-                .query(&[("id", flow_id)])
-                .header("Cookie", cookies)
+
+            let mut flow_req = client
+                .get(auth_config.get_url("self-service/login/flows"))
+                .query(&[("id", flow_id)]);
+
+            if let Some(cookie) = req.headers().get("Cookie") {
+                flow_req = flow_req.header("Cookie", cookie.to_str().unwrap());
+            }
+
+            let flow: Flow = flow_req
                 .send()
                 .await
                 .unwrap()

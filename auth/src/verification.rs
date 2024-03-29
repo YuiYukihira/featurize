@@ -3,7 +3,7 @@ use actix_web::{get, web, HttpResponse, Responder};
 use serde::{Deserialize, Serialize};
 use tera::Tera;
 
-use crate::{redirect, FlowUiNode};
+use crate::{redirect, AuthConfig, FlowUiNode};
 
 
 #[derive(Deserialize)]
@@ -39,15 +39,18 @@ pub struct VerificationFlowUiMessage {
 }
 
 #[get("/verification")]
-pub async fn route(tera: web::Data<Tera>, req: actix_web::HttpRequest, query: web::Query<VerifyQuery>) -> impl Responder {
+pub async fn route(tera: web::Data<Tera>, auth_config: web::Data<AuthConfig>, req: actix_web::HttpRequest, query: web::Query<VerifyQuery>) -> impl Responder {
     match &query.flow {
         None => redirect("/login"),
         Some(flow_id) => {
-            let cookies = req.headers().get("Cookie").unwrap().to_str().unwrap();
+            let cookies = match req.headers().get("Cookie") {
+                Some(cookies) => cookies.to_str().unwrap(),
+                None => return redirect("/login")
+            };
 
             let client = reqwest::Client::new();
             let flow: VerificationFlow = client
-                .get("http://localhost:4433/self-service/verfication/flows")
+                .get(auth_config.get_url("self-service/verfication/flows"))
                 .query(&[("id", flow_id)])
                 .header("Cookie", cookies)
                 .send()

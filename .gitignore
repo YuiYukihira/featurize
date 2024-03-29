@@ -1,12 +1,14 @@
 
 # nix
-/result
+result
 /.data
+/.cache
 
 # rust
 target/
 
 # nixago: ignore-linked-files
+/auth/fly.toml
 /mailslurper.json
 /kratos.yaml
 /hydra.yaml
@@ -14,3 +16,5 @@ target/
 /.prettierrc
 /lefthook.yml
 /treefmt.toml
+
+/auth/public/output.css

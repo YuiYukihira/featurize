@@ -9,6 +9,12 @@
     };
     helpers.url = "sourcehut:~yuiyukihira/devshell";
     rust-overlay.url = "github:oxalica/rust-overlay";
+    crane = {
+      url = "github:ipetkov/crane";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    flake-utils.url = "github:numtide/flake-utils";
+    n2c.follows = "std/n2c";
   };
 
   outputs = { std, ... }@inputs:
@@ -28,7 +34,9 @@
         ];
       }
       {
-        packages = std.harvest inputs.self [ [ "ory" "packages" ] ];
+        packages =
+          std.harvest inputs.self [ [ "ory" "packages" ] [ "auth" "packages" ] ];
+        apps = std.harvest inputs.self [ [ "auth" "apps" ] ];
         devShells = std.harvest inputs.self [ [ "_automation" "devshells" ] ];
         devshellProfiles =
           std.harvest inputs.self [ [ "featurize" "devshellProfiles" ] ];
