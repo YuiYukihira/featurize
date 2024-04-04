@@ -1,8 +1,9 @@
 use actix_web::{get, web, HttpResponse, Responder};
+use sentry::{Breadcrumb, Hub, SentryFutureExt};
 use serde::Deserialize;
 use tera::Tera;
 
-use crate::{redirect, AuthConfig, Flow};
+use crate::{Error, Flow, renderer::Renderer, kratos_client::{KratosClient, RegistrationBrowser, RegistrationFlowRequest}};
 
 
 #[derive(Deserialize, Debug)]
@@ -12,33 +13,38 @@ pub struct RegisterQuery {
 
 #[tracing::instrument]
 #[get("/registration")]
-pub async fn route(tera: web::Data<Tera>, auth_config: web::Data<AuthConfig>, req: actix_web::HttpRequest, query: web::Query<RegisterQuery>) -> impl Responder {
+pub async fn route(renderer: web::Data<Renderer>, kratos: web::Data<KratosClient>, req: actix_web::HttpRequest, query: web::Query<RegisterQuery>) -> Result<HttpResponse, Error> {
+    let hub = Hub::current();
+    handler(renderer, kratos, req, query).bind_hub(hub).await
+}
+
+#[tracing::instrument]
+pub async fn handler(renderer: web::Data<Renderer>, kratos: web::Data<KratosClient>, req: actix_web::HttpRequest, query: web::Query<RegisterQuery>) -> Result<HttpResponse, Error> {
     match &query.flow {
-        None => redirect(&auth_config.get_url("self-service/registration/browser")),
+        None => {
+            tracing::info!("redirecting to login flow");
+            Ok(kratos.redirect(RegistrationBrowser))
+        },
         Some(flow_id) => {
-            let client = reqwest::Client::new();
-
-            let mut flow_req = client
-                .get(auth_config.get_url("self-service/registration/flows"))
-                .query(&[("id", flow_id)]);
-
-            if let Some(cookie) = req.headers().get("Cookie") {
-                flow_req = flow_req.header("Cookie", cookie.to_str().unwrap());
-            }
-
-            let flow: Flow = flow_req
+            let cookie = match req.headers().get("Cookie") {
+                Some(cookie) => cookie,
+                None => {
+                    tracing::error!("No CSRF token found!");
+                    return Ok(kratos.redirect(RegistrationBrowser));
+                }
+            };
+            tracing::info!("getting flow");
+            let res = kratos.new_request(RegistrationFlowRequest(flow_id.to_string()))
+                .cookie(cookie.as_bytes())
                 .send()
-                .await
-                .unwrap()
-                .json()
-                .await
-                .unwrap();
+                .await?;
 
-            let mut context = tera::Context::new();
-            context.insert("flow", &flow);
+            let html = renderer
+                .render("register.html")
+                .var("flow", &res.body)
+                .finish()?;
 
-            let html = tera.render("register.html", &context).unwrap();
-            HttpResponse::Ok().body(html)
+            Ok(HttpResponse::Ok().body(html))
         }
     }
 }

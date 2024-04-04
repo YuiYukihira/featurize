@@ -1,10 +1,9 @@
-use actix_web::{get, web, HttpResponseBuilder, Responder};
+use actix_web::{get, web, HttpResponse, HttpResponseBuilder, Responder};
+use sentry::{Hub, SentryFutureExt};
 use serde::Deserialize;
 use tera::Tera;
 
-use crate::AuthConfig;
-
-
+use crate::{kratos_client::{ErrorsRequest, KratosClient}, renderer::{self, Renderer}, Error};
 
 #[derive(Deserialize, Debug)]
 pub struct ErrorQuery {
@@ -25,23 +24,21 @@ pub struct ErrorMessage {
 
 #[tracing::instrument]
 #[get("/error")]
-pub async fn route(tera: web::Data<Tera>, auth_config: web::Data<AuthConfig>, query: web::Query<ErrorQuery>) -> impl Responder {
-    let client = reqwest::Client::new();
-    let res = client
-        .get(auth_config.get_url("self-service/errors"))
-        .query(&[("id", &query.id)])
+pub async fn route(renderer: web::Data<Renderer>, kratos: web::Data<KratosClient>, query: web::Query<ErrorQuery>) -> Result<HttpResponse, Error> {
+    handler(renderer, kratos, query).bind_hub(Hub::current()).await
+}
+
+#[tracing::instrument]
+pub async fn handler(renderer: web::Data<Renderer>, auth_config: web::Data<KratosClient>, query: web::Query<ErrorQuery>) -> Result<HttpResponse, Error> {
+    let error = auth_config.new_request(ErrorsRequest(query.id.clone()))
         .send()
-        .await
-        .unwrap();
-    let error = res.json::<AuthError>()
-        .await
-        .unwrap()
-        .error;
+        .await?;
 
-    let mut context = tera::Context::new();
-    context.insert("msg", &error.message);
-    context.insert("reason", &error.reason);
+    let html = renderer
+        .render("error.html")
+        .var("msg", &error.body.error.message)
+        .var("reason", &error.body.error.reason)
+        .finish()?;
 
-    let html = tera.render("error.html", &context).unwrap();
-    HttpResponseBuilder::new(error.code.try_into().unwrap()).body(html)
+    Ok(HttpResponseBuilder::new(error.body.error.code.try_into().expect("error code was not a valid HTTP status code")).body(html))
 }

@@ -8,16 +8,13 @@
       start-command = pkgs.writeShellScriptBin "start-hydra" ''
         export DSN="postgres://${cfg.db.user.name}:${cfg.db.user.password}@${dbHost}:${cfg.db.port}/${cfg.db.name}?sslmode=disable&max_conns=20&max_idle_conns=4"
         sleep 5
-        ${cfg.package}/bin/hydra migrate sql --config ${cfg.config.location} -e --yes
-        ${cfg.package}/bin/hydra serve all --config ${cfg.config.location} --dev
+        ${cfg.package}/bin/hydra migrate sql --config ${configFile} -e --yes
+        ${cfg.package}/bin/hydra serve all --config ${configFile} --dev
       '';
 
-      configFile = {
-        output = cfg.config.location;
-        data = cfg.config.data;
-      };
-    in
-    {
+      configFile =
+        pkgs.writeText "config.yaml" (lib.generators.toYAML { } cfg.config);
+    in {
       options.services.hydra = {
         enable = mkEnableOption "Enable the service";
         package = mkOption {
@@ -57,16 +54,9 @@
             description = "Port of the DB host";
           };
         };
-        config = {
-          location = mkOption {
-            type = types.str;
-            default = "hydra.yaml";
-            description = "Location to generate hydra config file";
-          };
-          data = mkOption {
-            type = types.attrs;
-            description = "Config data";
-          };
+        config = mkOption {
+          type = types.attrs;
+          description = "Config data";
         };
       };
 
@@ -88,8 +78,6 @@
         }];
 
         commands = [{ package = cell.packages.hydra; }];
-
-        nixago = mkIf cfg.enable [ (inputs.std.lib.dev.mkNixago configFile) ];
       };
     };
   kratos = { config, lib, pkgs, ... }:
@@ -100,31 +88,26 @@
         if cfg.db.host == "nix-service" then "localhost" else cfg.db.host;
       start-command = pkgs.writeShellScriptBin "start-kratos" ''
         export DSN="postgres://${cfg.db.user.name}:${cfg.db.user.password}@${dbHost}:${cfg.db.port}/${cfg.db.name}?sslmode=disable&max_conns=20&max_idle_conns=4"
-        ${cfg.package}/bin/kratos migrate sql --config ${cfg.config.location} -e --yes
-        ${cfg.package}/bin/kratos serve all --config ${cfg.config.location} --dev --watch-courier
+        ${cfg.package}/bin/kratos migrate sql --config ${configFile} -e --yes
+        ${cfg.package}/bin/kratos serve all --config ${configFile} --dev --watch-courier
       '';
 
-      configFile = {
-        output = cfg.config.location;
-        data = cfg.config.data // {
-          courier = {
-            smtp = {
-              connection_uri =
-                let
-                  host =
-                    if cfg.mail.host == "nix-service" then
-                      "localhost"
-                    else
-                      cfg.mail.host;
-                  port = toString cfg.mail.port;
-                in
-                "smtp://${cfg.mail.user.name}:${cfg.mail.user.password}@${host}:${port}/?disable_starttls=true&skip_ssl_verify=true";
-            };
+      configFileData = cfg.config.data // {
+        courier = {
+          smtp = {
+            connection_uri = let
+              host = if cfg.mail.host == "nix-service" then
+                "localhost"
+              else
+                cfg.mail.host;
+              port = toString cfg.mail.port;
+            in "smtp://${cfg.mail.user.name}:${cfg.mail.user.password}@${host}:${port}/?disable_starttls=true&skip_ssl_verify=true";
           };
         };
       };
-    in
-    {
+      configFile =
+        pkgs.writeText "config.yaml" (lib.generators.toYAML { } configFileData);
+    in {
       options.services.kratos = {
         enable = mkEnableOption "Enable the service";
         package = mkOption {
@@ -217,8 +200,6 @@
         }];
 
         commands = [{ package = cell.packages.kratos; }];
-
-        nixago = mkIf cfg.enable [ (inputs.std.lib.dev.mkNixago configFile) ];
       };
     };
 }

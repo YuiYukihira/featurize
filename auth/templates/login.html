@@ -1,7 +1,10 @@
 {% extends "base.html" %}
 {% block title %}Log In{% endblock title %}
 {% block content %}
-    <h1 class="text-3xl">Register for Featurize!</h1>
+    <h1 class="text-3xl">Log into Featurize!</h1>
+    {% for msg in flow.ui.messages %}
+        <div class="text-red">{{msg.type}}: {{msg.text}}</div>
+    {% endfor %}
     <form class="flex flex-col space-y-2" action="{{flow.ui.action}}" method="{{flow.ui.method}}">
         {% for node in flow.ui.nodes %}
             {% for msg in node.messages %}

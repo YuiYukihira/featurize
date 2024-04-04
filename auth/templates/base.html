@@ -1,22 +1,45 @@
 <!doctype html>
 <html class="no-js" lang="">
-    <head>
-        {% block head %}
-        <meta charset="utf-8">
-        <meta http-equiv="x-ua-compatible" content="ie=edge">
-        <title>{% block title %}{% endblock title %} - Featurize</title>
-        <meta name="description" content="">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
+  <head>
+    {% block head %}
+    <meta charset="utf-8" />
+    <meta http-equiv="x-ua-compatible" content="ie=edge" />
+    <title>{% block title %}{% endblock title %} - Featurize</title>
+    <meta name="description" content="" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-        <link rel="stylesheet" href="/public/output.css" />
-        <!-- Place favicon.ico in the root directory -->
-        {% endblock head %}
-    </head>
-    <body>
-        <div id="content">
-            {% block content %}
-            {% endblock content %}
-        </div>
-    </body>
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="stylesheet" href="/public/output.css" />
+    <!-- Place favicon.ico in the root directory -->
+    {% endblock head %}
+  </head>
+  <body class="flex flex-col">
+    <div id="header" class="w-full height: 5% bg-blue flex flex-row">
+      <div>Featurize</div>
+    </div>
+    <div id="content">{% block content %} {% endblock content %}</div>
+  </body>
+  <!--
+  <script
+    src="https://browser.sentry-cdn.com/7.109.0/bundle.tracing.replay.min.js"
+    integrity="sha384-yUeLF1YOBa+gnOMSLMiMI/kkW40NC9CjlKj9I8sVm98HyWD6s57bVosZwg+Hp8Cb"
+    crossorigin="anonymous"
+  ></script>
+
+  <script>
+    import * as Sentry from "@sentry/browser";
+
+    Sentry.init({
+      dsn: "{{ sentry_dsn | safe }}",
+      replaysSessionSampleRate: 0.1,
+      replaysOnErrorSampleRate: 1.0,
+      integrations: [
+        Sentry.replayIntegration({
+          maskAllText: true,
+          blockAllMedia: true,
+        }),
+      ],
+    });
+  </script>
+  -->
 </html>

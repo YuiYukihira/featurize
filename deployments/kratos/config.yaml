@@ -1,0 +1,83 @@
+ciphers:
+    algorithm: xchacha20-poly1305
+feature_flags:
+    use_continue_with_transitions: true
+hashers:
+    algorithm: bcrypt
+    bcrypt:
+        cost: 12
+identity:
+    default_schema_id: default
+    schemas:
+    - id: default
+      url: https://raw.githubusercontent.com/ory/kratos/master/contrib/quickstart/kratos/email-password/identity.schema.json
+log:
+    format: text
+    leak_sensitive_values: false
+    level: info
+selfservice:
+    allowed_return_urls:
+    - https://auth.dragnof.pro
+    - https://featurize-auth.fly.dev
+    default_browser_return_url: https://auth.dragnof.pro
+    flows:
+        error:
+            ui_url: https://auth.dragnof.pro/error
+        login:
+            lifespan: 10m
+            ui_url: https://auth.dragnof.pro/login
+        logout:
+            after:
+                default_browser_return_url: https://auth.dragnof.pro
+        recovery:
+            enabled: true
+            ui_url: https://auth.dragnof.pro/recovery
+            use: code
+        registration:
+            after:
+                password:
+                    hooks:
+                    - hook: session
+                    - hook: show_verification_ui
+            lifespan: 10m
+            ui_url: https://auth.dragnof.pro/registration
+        settings:
+            privileged_session_max_age: 15m
+            required_aal: highest_available
+            ui_url: https://auth.dragnof.pro/settings
+        verification:
+            after:
+                default_browser_return_url: https://auth.dragnof.pro
+            enabled: true
+            ui_url: https://auth.dragnof.pro/verification
+            use: code
+    methods:
+        code:
+            enabled: true
+        link:
+            enabled: true
+        lookup_secret:
+            enabled: true
+        password:
+            enabled: true
+        totp:
+            config:
+                issuer: Featurize
+            enabled: true
+cookies:
+  domain: dragnof.pro
+session:
+    cookie:
+        domain: dragnof.pro
+courier:
+  smtp:
+    from_address: auth@dragnof.pro
+    from_name: Featurize
+serve:
+    public:
+        base_url: https://kratos.dragnof.pro/
+        cors:
+            allowed_origins:
+            - https://auth.dragnof.pro/
+            enabled: true
+version: v0.13.0

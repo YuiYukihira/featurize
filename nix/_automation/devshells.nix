@@ -2,8 +2,7 @@
 let
   inherit (inputs) nixpkgs std;
   l = nixpkgs.lib // builtins;
-in
-l.mapAttrs (_: std.lib.dev.mkShell) {
+in l.mapAttrs (_: std.lib.dev.mkShell) {
   default = { ... }: {
     name = "romanticise devshell";
 
@@ -26,32 +25,63 @@ l.mapAttrs (_: std.lib.dev.mkShell) {
       { package = nixpkgs.tailwindcss; }
       { package = nixpkgs.flyctl; }
       {
-        package =
-          let
-            cargoWatch = nixpkgs.writeShellScriptBin "cargo-watch" ''
-              sigint_handler()
-              {
-                kill $PID
-                exit
-              }
+        package = nixpkgs.writeShellScriptBin "deploy" ''
+          set -eux
+          args=("$@")
+          if [[ "$1" == "all" ]]; then
+            args=("auth" "kratos")
+          fi
 
-              trap sigint_handler SIGINT
+          for app in "''${args[@]}"
+          do
+            case "$app" in
+              auth)
+                std //auth/containers/auth:load
+                ${nixpkgs.docker}/bin/docker push registry.fly.io/featurize-auth:${inputs.cells.auth.args.crateName.version}
+                pushd "$PRJ_ROOT"/deployments/auth
+                ${nixpkgs.flyctl}/bin/fly deploy
+                popd
+                ;;
+              kratos)
+                pushd "$PRJ_ROOT"/deployments/kratos
+                ${nixpkgs.flyctl}/bin/fly deploy
+                popd
+                ;;
+              *)
+                echo "No deployment with that name found"
+                exit 1
+                ;;
+            esac
+          done'';
+      }
+      {
+        package = let
+          cargoWatch = nixpkgs.writeShellScriptBin "cargo-watch" ''
+            export SENTRY_DSN="https://27b90b52936e6487f9baffd388628165@o4506987579047936.ingest.us.sentry.io/4506991920807936"
+            export KRATOS_DOMAIN="https://flamboyant-austin-06hwmvtz98.projects.oryapis.com";
 
-              while true; do
-                ${inputs.cells.rust.toolchain.rust}/bin/cargo run &
-                PID=$!
-                ${nixpkgs.inotify-tools}/bin/inotifywait -e modify -e move -e create -e delete -e attrib -r src public templates
-                kill $PID
-              done
-            '';
-            procfile = nixpkgs.writeText "Procfile.watch" ''
-              tailwind: ${nixpkgs.tailwindcss}/bin/tailwindcss -i ./src/input.css -o ./public/output.css --watch
-              auth: PORT=3000 ${cargoWatch}/bin/cargo-watch
-            '';
-          in
-          nixpkgs.writeShellScriptBin "watch" ''
-            ${nixpkgs.honcho}/bin/honcho start -f ${procfile} -d "$PRJ_ROOT/auth"
+            sigint_handler()
+            {
+              kill $PID
+              exit
+            }
+
+            trap sigint_handler SIGINT
+
+            while true; do
+              ${inputs.cells.rust.toolchain.rust}/bin/cargo run &
+              PID=$!
+              ${nixpkgs.inotify-tools}/bin/inotifywait -e modify -e move -e create -e delete -e attrib -r src public templates
+              kill $PID
+            done
           '';
+          procfile = nixpkgs.writeText "Procfile.watch" ''
+            tailwind: ${nixpkgs.tailwindcss}/bin/tailwindcss -i ./src/input.css -o ./public/output.css --watch
+            auth: PORT=3000 ${cargoWatch}/bin/cargo-watch
+          '';
+        in nixpkgs.writeShellScriptBin "watch" ''
+          ${nixpkgs.honcho}/bin/honcho start -f ${procfile} -d "$PRJ_ROOT/auth"
+        '';
       }
     ];
 
@@ -186,7 +216,6 @@ l.mapAttrs (_: std.lib.dev.mkShell) {
       (std.lib.dev.mkNixago cell.configs.prettier)
       ((std.lib.dev.mkNixago std.lib.cfg.treefmt) cell.configs.treefmt)
       ((std.lib.dev.mkNixago std.lib.cfg.conform) cell.configs.conform)
-      (std.lib.dev.mkNixago cell.configs.auth-fly)
     ];
   };
 }

@@ -1,9 +1,10 @@
 
 use actix_web::{get, web, HttpResponse, Responder};
+use sentry::{SentryFutureExt, Hub};
 use serde::{Deserialize, Serialize};
 use tera::Tera;
 
-use crate::{redirect, AuthConfig, FlowUiNode};
+use crate::{kratos_client::{KratosClient, VerificationFlowRequest}, renderer::Renderer, FlowUiNode, Error};
 
 
 #[derive(Deserialize, Debug)]
@@ -40,32 +41,35 @@ pub struct VerificationFlowUiMessage {
 
 #[tracing::instrument]
 #[get("/verification")]
-pub async fn route(tera: web::Data<Tera>, auth_config: web::Data<AuthConfig>, req: actix_web::HttpRequest, query: web::Query<VerifyQuery>) -> impl Responder {
+pub async fn route(renderer: web::Data<Renderer>, kratos: web::Data<KratosClient>, req: actix_web::HttpRequest, query: web::Query<VerifyQuery>) -> Result<HttpResponse, Error> {
+    handler(renderer, kratos, req, query).bind_hub(Hub::current()).await
+}
+
+fn login_redirect() -> HttpResponse {
+    HttpResponse::SeeOther().append_header(("Location", "/login")).finish()
+}
+
+#[tracing::instrument]
+pub async fn handler(renderer: web::Data<Renderer>, kratos: web::Data<KratosClient>, req: actix_web::HttpRequest, query: web::Query<VerifyQuery>) -> Result<HttpResponse, Error> {
     match &query.flow {
-        None => redirect("/login"),
+        None => Ok(login_redirect()),
         Some(flow_id) => {
-            let cookies = match req.headers().get("Cookie") {
-                Some(cookies) => cookies.to_str().unwrap(),
-                None => return redirect("/login")
+            let cookie = match req.headers().get("Cookie") {
+                Some(cookie) => cookie,
+                None => return Ok(login_redirect())
             };
-
-            let client = reqwest::Client::new();
-            let flow: VerificationFlow = client
-                .get(auth_config.get_url("self-service/verfication/flows"))
-                .query(&[("id", flow_id)])
-                .header("Cookie", cookies)
+            tracing::info!("getting flow");
+            let res = kratos.new_request(VerificationFlowRequest(flow_id.to_string()))
+                .cookie(cookie.as_bytes())
                 .send()
-                .await
-                .unwrap()
-                .json()
-                .await
-                .unwrap();
+                .await?;
 
-            let mut context = tera::Context::new();
-            context.insert("flow", &flow);
+            let html = renderer
+                .render("verification.html")
+                .var("flow", &res.body)
+                .finish()?;
 
-            let html = tera.render("verification.html", &context).unwrap();
-            HttpResponse::Ok().body(html)
+            Ok(HttpResponse::Ok().body(html))
         }
     }
 }

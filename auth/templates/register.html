@@ -2,7 +2,12 @@
 {% block title %}Register{% endblock title %}
 {% block content %}
     <h1 class="text-3xl">Register for Featurize!</h1>
-    <form class="flex flex-col space-y-2" action="http://localhost:4433/self-service/registration?flow={{flow.id}}" method="post">
+    {% if flow.ui.messages %}
+    {% for msg in flow.ui.messages %}
+        <div class="text-red">{{msg.type}}: {{msg.text}}</div>
+    {% endfor %}
+    {% endif %}
+    <form class="flex flex-col space-y-2" action="{{flow.ui.action}}" method="{{flow.ui.method}}">
         {% for node in flow.ui.nodes %}
             {% for msg in node.messages %}
                 <p>{{msg.text}}</p>

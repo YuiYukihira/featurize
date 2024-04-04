@@ -1,55 +1,53 @@
-use actix_web::{get, web, HttpResponse, Responder};
+use actix_web::{get, web, HttpResponse};
 use reqwest::StatusCode;
-use serde::Deserialize;
-use tera::Tera;
+use sentry::{Hub, SentryFutureExt};
 
-use crate::AuthConfig;
+use crate::{kratos_client::{KratosClient, WhoAmIRequest, LogoutBrowserRequest}, renderer::Renderer, Error};
 
-#[derive(Deserialize)]
-struct LogoutUrlResponse {
-    logout_url: String,
-}
 
 #[tracing::instrument]
 #[get("/")]
-pub async fn route(tera: web::Data<Tera>, auth_config: web::Data<AuthConfig>, req: actix_web::HttpRequest) -> impl Responder {
+pub async fn route(renderer: web::Data<Renderer>, kratos: web::Data<KratosClient>, req: actix_web::HttpRequest) -> Result<HttpResponse, Error> {
+    let hub = Hub::current();
+    handler(renderer, kratos, req).bind_hub(hub).await
+}
+
+#[tracing::instrument]
+pub async fn handler(renderer: web::Data<Renderer>, kratos: web::Data<KratosClient>, req: actix_web::HttpRequest) -> Result<HttpResponse, Error> {
+
     let cookie = match req
         .headers()
         .get("Cookie") {
-            Some(cookie) => cookie.to_str().unwrap(),
+            Some(cookie) => cookie.as_bytes(),
             None => {
-                let context = tera::Context::new();
-                let template_file = "index.html";
-                let html = tera.render(template_file, &context).unwrap();
-                return HttpResponse::Ok().body(html);
+                tracing::info!("no cookie, showing public view");
+                let html = renderer.render("index.html")
+                    .finish()?;
+                return Ok(HttpResponse::Ok().body(html));
             }
         };
 
-    let client = reqwest::Client::new();
-    let res = client
-        .get(auth_config.get_url("session/whoami"))
-        .header("Cookie", cookie)
+    let session = kratos.new_request(WhoAmIRequest)
+        .cookie(cookie)
         .send()
-        .await
-        .unwrap();
+        .await?;
 
-    let mut context = tera::Context::new();
-    let mut template_file = "index.html";
+    let render_builder;
 
-    if res.status() == StatusCode::OK {
-        let logout_url: LogoutUrlResponse = client
-            .get(auth_config.get_url("self-service/logout/browser"))
-            .header("Cookie", cookie)
+    if session.status_code == StatusCode::OK {
+        let logout_url = kratos.new_request(LogoutBrowserRequest)
+            .cookie(cookie)
             .send()
-            .await
-            .unwrap()
-            .json()
-            .await
-            .unwrap();
-        context.insert("logout_url", &logout_url.logout_url);
-        template_file = "home.html";
+            .await?;
+        render_builder = renderer.render("home.html")
+            .var("logout_url", &logout_url.body.logout_url);
+    } else if session.status_code != StatusCode::UNAUTHORIZED {
+        render_builder = renderer.render("index.html");
+        tracing::error!("Unexpected response code from identity server!");
+    } else {
+        render_builder = renderer.render("index.html");
     }
 
-    let html = tera.render(template_file, &context).unwrap();
-    HttpResponse::Ok().body(html)
+    let html = render_builder.finish()?;
+    Ok(HttpResponse::Ok().body(html))
 }

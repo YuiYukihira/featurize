@@ -2,8 +2,7 @@
 let
   inherit (inputs) nixpkgs std;
   l = nixpkgs.lib // builtins;
-in
-{
+in {
   lefthook = {
     data = {
       commit-msg = {
@@ -79,38 +78,5 @@ in
     };
 
     packages = [ nixpkgs.nixpkgs-fmt nixpkgs.nodePackages.prettier ];
-  };
-
-  auth-fly = {
-    data = {
-      app = "featurize-auth";
-      primary_region = "lhr";
-
-      http_service = {
-        internal_port = 8080;
-        force_https = true;
-        auto_stop_machines = true;
-        auto_start_machines = true;
-        min_machines_running = 0;
-      };
-
-      vm = [{
-        memory = "1gb";
-        cpu_kind = "shared";
-        cpus = 1;
-      }];
-
-      build = {
-        image =
-          "registry.fly.io/featurize-auth:${inputs.cells.auth.args.crateName.version}";
-      };
-
-      env = {
-        KRATOS_DOMAIN =
-          "https://flamboyant-austin-06hwmvtz98.projects.oryapis.com";
-        PORT = "8080";
-      };
-    };
-    output = "auth/fly.toml";
   };
 }

@@ -8,10 +8,6 @@ result
 target/
 
 # nixago: ignore-linked-files
-/auth/fly.toml
-/mailslurper.json
-/kratos.yaml
-/hydra.yaml
 /.conform.yaml
 /.prettierrc
 /lefthook.yml

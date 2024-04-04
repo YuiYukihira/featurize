@@ -1,0 +1,33 @@
+# fly.toml app configuration file generated for featurize-kratos on 2024-03-31T22:17:56Z
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'featurize-kratos'
+primary_region = 'lhr'
+
+[build]
+  image = "oryd/kratos:v1.1.0-distroless"
+
+[http_service]
+  internal_port = 4433
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ['app']
+
+[[vm]]
+  memory = '1gb'
+  cpu_kind = 'shared'
+  cpus = 1
+
+[[files]]
+  local_path = "config.yaml"
+  guest_path = "/config.yaml"
+
+[deploy]
+  release_command = "migrate sql -e --yes"
+
+[experimental]
+  cmd = ["serve", "-c", "/config.yaml", "--watch-courier"]

@@ -3,29 +3,27 @@
     with lib;
     let
       cfg = config.services.mailslurper;
-      configFile = {
-        output = cfg.config.location;
-        data = {
-          wwwAddress = "127.0.0.1";
-          wwwPort = cfg.config.wwwPort;
-          serviceAddress = "127.0.0.1";
-          servicePort = cfg.config.servicePort;
-          smtpAddress = "127.0.0.1";
-          smtpPort = cfg.config.smtpPort;
-          dbEngine = "SQLite";
-          dbHost = "";
-          dbPort = 0;
-          dbDatabase = ".data/mailslurper.db";
-          dbUserName = "";
-          dbPassword = "";
-          maxWorkers = 1000;
-        };
+      configFileData = {
+        wwwAddress = "127.0.0.1";
+        wwwPort = cfg.config.wwwPort;
+        serviceAddress = "127.0.0.1";
+        servicePort = cfg.config.servicePort;
+        smtpAddress = "127.0.0.1";
+        smtpPort = cfg.config.smtpPort;
+        dbEngine = "SQLite";
+        dbHost = "";
+        dbPort = 0;
+        dbDatabase = ".data/mailslurper.db";
+        dbUserName = "";
+        dbPassword = "";
+        maxWorkers = 1000;
       };
+      configFile =
+        pkgs.writeText "config.json" (lib.generators.toJSON { } configFileData);
       start-command = pkgs.writeShellScriptBin "start-mailslurper" ''
-        ${cfg.package}/bin/mailslurper -config ${cfg.config.location}
+        ${cfg.package}/bin/mailslurper -config ${configFile}
       '';
-    in
-    {
+    in {
       options.services.mailslurper = {
         enable = mkEnableOption "Enable the service";
         package = mkOption {
@@ -34,11 +32,6 @@
           description = "Package to use";
         };
         config = {
-          location = mkOption {
-            type = types.str;
-            default = "mailslurper.json";
-            description = "Location to generate mailslurper config file";
-          };
           wwwPort = mkOption {
             type = types.int;
             default = 8080;
@@ -62,7 +55,6 @@
 
         commands = [{ package = cell.packages.mailslurper; }];
 
-        nixago = mkIf cfg.enable [ (inputs.std.lib.dev.mkNixago configFile) ];
       };
     };
 }
