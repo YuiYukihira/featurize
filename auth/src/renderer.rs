@@ -1,6 +1,20 @@
+// Featurize, the FOSS feature flagging
+// Copyright (C) 2024  Lucy Ekaterina
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
 use serde::ser::Serialize;
 use tera::{Context, Tera};
-
 
 #[derive(Debug)]
 pub struct Renderer {
@@ -10,10 +24,7 @@ pub struct Renderer {
 
 impl Renderer {
     pub fn new(tera: Tera, sentry_dsn: String) -> Self {
-        Self {
-            tera,
-            sentry_dsn
-        }
+        Self { tera, sentry_dsn }
     }
 
     pub fn render<S: AsRef<str>>(&self, template_name: S) -> RenderBuilder<'_, S> {
@@ -34,20 +45,22 @@ impl<'a, S: AsRef<str>> RenderBuilder<'a, S> {
         Self {
             renderer,
             context,
-            template: template_name
+            template: template_name,
         }
     }
 
     pub fn var<K, V>(mut self, name: K, val: &V) -> Self
-        where
+    where
         K: Into<String>,
-    V: Serialize + ?Sized
-        {
+        V: Serialize + ?Sized,
+    {
         self.context.insert(name, val);
         self
     }
 
     pub fn finish(self) -> tera::Result<String> {
-        self.renderer.tera.render(self.template.as_ref(), &self.context)
+        self.renderer
+            .tera
+            .render(self.template.as_ref(), &self.context)
     }
 }

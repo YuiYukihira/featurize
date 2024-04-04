@@ -2,7 +2,8 @@
 let
   inherit (inputs) nixpkgs std;
   l = nixpkgs.lib // builtins;
-in {
+in
+{
   lefthook = {
     data = {
       commit-msg = {
