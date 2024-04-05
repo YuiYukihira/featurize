@@ -1,0 +1,33 @@
+image: nixos/unstable
+sources:
+  - https://git.sr.ht/~yuiyukihira/featurize
+secrets:
+  - "featurize-auth deploy token"
+  - "featurize-kratos deploy token"
+packages:
+  - nixos.docker
+environment:
+  NIX_CONFIG: "experimental-features = nix-command flakes"
+tasks:
+  - build: |
+      cd ~/featurize
+      nix build .#auth
+  - check: |
+      cd ~/featurize
+      nix flake check
+  - check-for-git-main: |
+      if [[ "$BUILD_SUBMITTER" != "git.sr.ht" || "$GIT_REF" != "refs/heads/main"  ]]; then \
+        echo "not on main branch, stopping"; \
+        complete-build; \
+      fi
+  - deploy: |
+      . ~/featurize/ci/setup-docker.sh &
+      cd ~/featurize
+      set +x
+      export FLY_ACCESS_TOKEN="$(cat ~/.fly/featurize-kratos)"
+      set -x
+      nix develop --command deploy kratos
+      set +x
+      export FLY_ACCESS_TOKEN="$(cat ~/.fly/featurize-auth)"
+      set -x
+      nix develop --command deploy auth
