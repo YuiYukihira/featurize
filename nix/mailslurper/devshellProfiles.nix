@@ -23,7 +23,8 @@
       start-command = pkgs.writeShellScriptBin "start-mailslurper" ''
         ${cfg.package}/bin/mailslurper -config ${configFile}
       '';
-    in {
+    in
+    {
       options.services.mailslurper = {
         enable = mkEnableOption "Enable the service";
         package = mkOption {

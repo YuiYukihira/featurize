@@ -1,0 +1,17 @@
+name: Release-Please
+on:
+  push:
+    branches:
+      - main
+permissions:
+  contents: write
+  pull-requests: write
+jobs:
+  release-please:
+    name: Release Please
+    runs-on: ubuntu-latest
+    steps:
+      - uses: YuiYukihira/release-please-action@6b68fd315f11a08d4ff9768b3d174d3e3e85d9ff
+        with:
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+          config-file: release-please-config.json
