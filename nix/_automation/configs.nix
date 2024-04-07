@@ -31,7 +31,7 @@ in
           case = "upper";
           invalidLastCharacters = ".,!?";
         };
-        body = { required = true; };
+        body = { required = false; };
         dco = true;
         spellcheck = { locale = "US"; };
         conventional = {
