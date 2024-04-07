@@ -14,7 +14,8 @@
 
       configFile =
         pkgs.writeText "config.yaml" (lib.generators.toYAML { } cfg.config);
-    in {
+    in
+    {
       options.services.hydra = {
         enable = mkEnableOption "Enable the service";
         package = mkOption {
@@ -95,19 +96,23 @@
       configFileData = cfg.config.data // {
         courier = {
           smtp = {
-            connection_uri = let
-              host = if cfg.mail.host == "nix-service" then
-                "localhost"
-              else
-                cfg.mail.host;
-              port = toString cfg.mail.port;
-            in "smtp://${cfg.mail.user.name}:${cfg.mail.user.password}@${host}:${port}/?disable_starttls=true&skip_ssl_verify=true";
+            connection_uri =
+              let
+                host =
+                  if cfg.mail.host == "nix-service" then
+                    "localhost"
+                  else
+                    cfg.mail.host;
+                port = toString cfg.mail.port;
+              in
+              "smtp://${cfg.mail.user.name}:${cfg.mail.user.password}@${host}:${port}/?disable_starttls=true&skip_ssl_verify=true";
           };
         };
       };
       configFile =
         pkgs.writeText "config.yaml" (lib.generators.toYAML { } configFileData);
-    in {
+    in
+    {
       options.services.kratos = {
         enable = mkEnableOption "Enable the service";
         package = mkOption {

@@ -31,7 +31,7 @@ in
           case = "upper";
           invalidLastCharacters = ".,!?";
         };
-        body = { required = true; };
+        body = { required = false; };
         dco = true;
         spellcheck = { locale = "US"; };
         conventional = {
@@ -48,6 +48,7 @@ in
             "test"
             "wip"
           ];
+          scopes = [ "main" ];
           descriptionLength = 72;
         };
       };
@@ -74,6 +75,7 @@ in
           command = "prettier";
           options = [ "--write" ];
           includes = [ "*.md" ];
+          excludes = [ "**/CHANGELOG.md" ];
         };
       };
     };
