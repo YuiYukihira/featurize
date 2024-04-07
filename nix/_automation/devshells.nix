@@ -4,8 +4,45 @@ let
   l = nixpkgs.lib // builtins;
 in
 l.mapAttrs (_: std.lib.dev.mkShell) {
+  ci = { ... }: {
+    name = "featurize cishell";
+
+    imports = [
+      std.std.devshellProfiles.default
+      inputs.helpers.devshellProfiles.base
+      inputs.helpers.devshellProfiles.language.rust
+      inputs.helpers.devshellProfiles.language.c
+    ];
+
+    language.rust.packageSet = inputs.cells.rust.toolchain.rust;
+
+    commands = [{
+      package = nixpkgs.writeShellScriptBin "deploy" ''
+        set -eux
+        echo "Deploying kratos..."
+        pushd "$PRJ_ROOT/deployments/kratos"
+        ${nixpkgs.flyctl}/bin/fly deploy
+        popd
+        echo "Deploying auth..."
+        pushd "$PRJ_ROOT/deployments/auth"
+        std //auth/containers/auth:load
+        ${nixpkgs.docker}/bin/docker push registry.fly.io/featurize-auth:${inputs.cells.auth.args.crateName.version}
+        ${nixpkgs.flyctl}/bin/fly deploy
+        popd
+        echo "Done!"
+      '';
+    }];
+
+    nixago = [
+      ((std.lib.dev.mkNixago std.lib.cfg.lefthook) cell.configs.lefthook)
+      (std.lib.dev.mkNixago cell.configs.prettier)
+      ((std.lib.dev.mkNixago std.lib.cfg.treefmt) cell.configs.treefmt)
+      ((std.lib.dev.mkNixago std.lib.cfg.conform) cell.configs.conform)
+    ];
+  };
+
   default = { ... }: {
-    name = "romanticise devshell";
+    name = "featurize devshell";
 
     imports = [
       std.std.devshellProfiles.default
