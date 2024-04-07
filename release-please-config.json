@@ -1,0 +1,10 @@
+{
+    "release-type": "rust",
+    "plugins": ["cargo-workspace"],
+    "packages": {
+        ".": {},
+        "auth": {}
+    },
+    "pull-request-title-pattern": "chore${scope}: Release${component} ${version}",
+    "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json"
+}
