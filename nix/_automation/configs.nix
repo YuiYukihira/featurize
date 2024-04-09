@@ -28,7 +28,6 @@ in
         header = {
           length = 89;
           imperative = true;
-          case = "upper";
           invalidLastCharacters = ".,!?";
         };
         body = { required = false; };
