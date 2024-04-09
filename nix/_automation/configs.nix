@@ -48,7 +48,7 @@ in
             "test"
             "wip"
           ];
-          scopes = [ "main" ];
+          scopes = [ "main" "deps" ];
           descriptionLength = 72;
         };
       };
