@@ -1,7 +1,7 @@
 version = 1
 
 [merge]
-priority_merge_lavel = "high priority"
+priority_merge_label = "high priority"
 
 [merge.automerge_dependencies]
 versions = [ "minor", "patch" ]
