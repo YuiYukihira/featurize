@@ -9,6 +9,9 @@ jobs:
       - uses: cachix/install-nix-action@v25
         with:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: cachix/cachix-action@v14
+        with:
+          name: yuiyukihira
       - name: Check
         run: nix flake check
   conform:
@@ -20,7 +23,14 @@ jobs:
       - uses: cachix/install-nix-action@v25
         with:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: cachix/cachix-action@v14
+        with:
+          name: yuiyukihira
       - name: Conform
-        run: nix develop .#ci --command conform enforce --revision-range ${{ github.event.pull_request.head.sha }}~${{ github.event.pull_request.commits }}..${{ github.event.pull_request.head.sha }}
+        run:
+          nix develop .#ci --command conform enforce --revision-range ${{
+          github.event.pull_request.head.sha }}~${{
+          github.event.pull_request.commits }}..${{
+          github.event.pull_request.head.sha }}
       - name: Treefmt
         run: nix develop .#ci --command treefmt -c --fail-on-change
