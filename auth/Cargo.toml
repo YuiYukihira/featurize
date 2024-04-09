@@ -10,7 +10,7 @@ actix-files = "0.6.5"
 actix-web = { version = "4.5.1", features = ["rustls"] }
 color-eyre = "0.6.3"
 futures = "0.3.30"
-reqwest = { version = "0.12.0", default-features=false, features = ["http2", "rustls-tls", "cookies", "json", "charset"] }
+reqwest = { version = "0.12.3", default-features=false, features = ["http2", "rustls-tls", "cookies", "json", "charset"] }
 sentry = { version = "0.32.2", default-features = false, features = ["backtrace", "contexts", "panic", "debug-images", "reqwest", "rustls"] }
 sentry-actix = "0.32.2"
 sentry-tracing = "0.32.2"
