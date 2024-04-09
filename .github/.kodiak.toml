@@ -7,6 +7,9 @@ priority_merge_label = "high priority"
 versions = [ "minor", "patch" ]
 usernames = [ "renovate" ]
 
+[approve]
+auto_approve_usernames = [ "renovate", "YuiYukihira" ]
+
 [merge.message]
 title = "pull_request_title"
 body = "pull_request_body"
