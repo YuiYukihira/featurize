@@ -54,6 +54,7 @@ l.mapAttrs (_: std.lib.dev.mkShell) {
       inputs.cells.ory.devshellProfiles.hydra
       inputs.cells.ory.devshellProfiles.kratos
       inputs.cells.mailslurper.devshellProfiles.mailslurper
+      inputs.cells.auth.devshellProfiles.auth-watch
     ];
 
     language.rust.packageSet = inputs.cells.rust.toolchain.rust;
@@ -92,44 +93,14 @@ l.mapAttrs (_: std.lib.dev.mkShell) {
             esac
           done'';
       }
-      {
-        package =
-          let
-            cargoWatch = nixpkgs.writeShellScriptBin "cargo-watch" ''
-              set -eux
-              export SENTRY_DSN="https://27b90b52936e6487f9baffd388628165@o4506987579047936.ingest.us.sentry.io/4506991920807936"
-              export KRATOS_DOMAIN="https://flamboyant-austin-06hwmvtz98.projects.oryapis.com";
-
-              sigint_handler()
-              {
-                kill $PID
-                exit
-              }
-
-              trap sigint_handler SIGINT
-
-              pushd $PRJ_ROOT/auth
-              while true; do
-                ${inputs.cells.rust.toolchain.rust}/bin/cargo run &
-                PID=$!
-                ${nixpkgs.inotify-tools}/bin/inotifywait -e modify -e move -e create -e delete -e attrib -r src public templates
-                kill $PID
-              done
-            '';
-            procfile = nixpkgs.writeText "Procfile.watch" ''
-              kratos: services kratos start
-              mailslurper: services mailslurper start
-              tailwind: ${nixpkgs.tailwindcss}/bin/tailwindcss -i $PRJ_ROOT/auth/src/input.css -o $PRJ_ROOT/auth/public/output.css --watch
-              auth: PORT=3000 ${cargoWatch}/bin/cargo-watch
-            '';
-          in
-          nixpkgs.writeShellScriptBin "watch" ''
-            ${nixpkgs.honcho}/bin/honcho start -f ${procfile} -d "$PRJ_ROOT/auth"
-          '';
-      }
     ];
 
     services = {
+      auth-watch = {
+        enable = true;
+        sentry_dsn =
+          "https://27b90b52936e6487f9baffd388628165@o4506987579047936.ingest.us.sentry.io/4506991920807936";
+      };
       mailslurper = { enable = true; };
       minio = {
         enable = true;

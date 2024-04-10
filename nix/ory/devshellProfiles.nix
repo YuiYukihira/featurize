@@ -87,8 +87,15 @@
       cfg = config.services.kratos;
       dbHost =
         if cfg.db.host == "nix-service" then "localhost" else cfg.db.host;
+      wait-for-db = optionalString (cfg.db.host == "nix-service") ''
+        while ! netstat -tna | grep 'LISTEN\>' | grep -q ':${cfg.db.port}\>'; do
+          echo "Waiting for db..."
+          sleep 5
+        done
+      '';
       start-command = pkgs.writeShellScriptBin "start-kratos" ''
         export DSN="postgres://${cfg.db.user.name}:${cfg.db.user.password}@${dbHost}:${cfg.db.port}/${cfg.db.name}?sslmode=disable&max_conns=20&max_idle_conns=4"
+        ${wait-for-db}
         ${cfg.package}/bin/kratos migrate sql --config ${configFile} -e --yes
         ${cfg.package}/bin/kratos serve all --config ${configFile} --dev --watch-courier
       '';
