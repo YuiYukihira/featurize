@@ -586,11 +586,6 @@ video {
   z-index: 50;
 }
 
-.mx-auto {
-  margin-left: auto;
-  margin-right: auto;
-}
-
 .mr-2 {
   margin-right: 0.5rem;
 }
@@ -889,6 +884,10 @@ video {
   transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter, -webkit-backdrop-filter;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 150ms;
+}
+
+.last\:\!mt-4:last-child {
+  margin-top: 1rem !important;
 }
 
 .hover\:from-pink-200:hover {

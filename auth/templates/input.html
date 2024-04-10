@@ -1,6 +1,6 @@
 {% macro input(label, input) %}
 {% if input.attributes.type == "submit" %}
-<div class="w-full">
+<div class="w-full last:!mt-4">
     <input type="hidden" name="{{ input.attributes.name }}" value={{ input.attributes.value }} />
     <div
         class="relative border rounded w-full bg-white border-pink-300 bg-gradient-to-b from-pink-100 to-pink-200 hover:from-pink-200 hover:to-pink-300"
@@ -14,14 +14,15 @@
     </div>
 </div>
 {% else %}
-<div class="w-full">
+<div class="w-full last:!mt-4">
     {% if label %}
-    <div class="text-pink-200"
-         id="{{ label.id }}"
-    >{{ label.text }}</div>
+    <label class="text-pink-200"
+        for="{{ input.attributes.name }}"
+    >{{ label.text }}</label>
     {% endif %}
     <{{ input.type }}
         class="border rounded w-full border-pink-200 px-1"
+        id="{{ input.attributes.name }}"
         name="{{ input.attributes.name }}"
         {% if label %} placeholder="{{ label.text }}" {% endif %}
         {% if input.attributes.disabled %} disabled {% endif %}
