@@ -1,25 +1,29 @@
 {% extends "base.html" %}
+{% import "info.html" as info %}
+{% import "input.html" as input %}
 {% block title %}Register{% endblock title %}
 {% block content %}
-    <h1 class="text-3xl">Register for Featurize!</h1>
-    {% if flow.ui.messages %}
-    {% for msg in flow.ui.messages %}
-        <div class="text-red">{{msg.type}}: {{msg.text}}</div>
-    {% endfor %}
-    {% endif %}
-    <form class="flex flex-col space-y-2" action="{{flow.ui.action}}" method="{{flow.ui.method}}">
+<div class="h-full w-full flex flex-col items-center justify-center">
+    <div class="w-1/2 max-w-md min-h-md bg-pink-600 p-6 border border-pink-600 relative overflow-hidden rounded-xl">
+        <div class="absolute top-1/3 -left-32 -translate-y-1/2 rounded-full w-80 h-80 blur-3xl mix-blend bg-pink-500"></div>
+        <div class="absolute -top-56 left-1/2 -translate-x-1/2 rounded-full w-96 h-96 blur-3xl mix-blend bg-pink-400"></div>
+        <h1 class="text-3xl relative -top-1 text-white">Register for Featurize!</h1>
+        {% if flow.ui.messages %}
+        {% for msg in flow.ui.messages %}
+        <div class="relative">{{ info::panel(label=msg.text, type=msg.type) }}</div>
+        {% endfor %}
+        {% endif %}
+        <form class="relative flex flex-col space-y-2" action="{{flow.ui.action}}" method="{{flow.ui.method}}">
         {% for node in flow.ui.nodes %}
             {% for msg in node.messages %}
-                <p>{{msg.text}}</p>
+            {{ info::panel(label=msg.text, type=msg.type) }}
             {% endfor %}
-            <{{node.type}}
-                class="border rounded"
-                name="{{node.attributes.name}}"
-                placeholder="{{node.attributes.name}}"
-                {% if node.attributes.disabled %} disabled {% endif %}
-                type="{{node.attributes.type}}"
-                {% if node.attributes.value %} value="{{node.attributes.value}}" {% endif %}
-            />
+            {{ input::input(label=node.meta.label, input=node) }}
         {% endfor %}
-    </form>
+        </form>
+        <div class="relative w-full flex justify-center">
+            <a class="text-pink-200 hover:text-pink-300 text-sm" href="/login">Or log in here</a>
+        </div>
+    </div>
+</div>
 {% endblock content %}

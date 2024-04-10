@@ -13,11 +13,17 @@
     <!-- Place favicon.ico in the root directory -->
     {% endblock head %}
   </head>
-  <body class="flex flex-col">
-    <div id="header" class="w-full height: 5% bg-blue flex flex-row">
-      <div>Featurize</div>
+  <body class="flex flex-col h-screen w-screen">
+    <div
+      id="header"
+      class="w-full h-12 bg-pink-100 flex flex-row justify-between"
+    >
+      <div>
+        <a class="hover:text-pink-500" href="/">Featurize</a>
+      </div>
+      <div>{% block profile %}{% endblock profile %}</div>
     </div>
-    <div id="content">{% block content %} {% endblock content %}</div>
+    <div id="content" class="h-full w-full">{% block content %} {% endblock content %}</div>
   </body>
   <!--
   <script

@@ -71,7 +71,7 @@ pub struct FlowUi {
     action: String,
     method: String,
     #[serde(default)]
-    messages: Vec<FlowUiMessage>
+    messages: Vec<FlowUiMessage>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -87,6 +87,12 @@ pub struct FlowUiNode {
     group: String,
     r#type: String,
     messages: Vec<FlowUiNodeMessages>,
+    meta: FlowUiNodeMeta
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct FlowUiNodeMeta {
+    label: Option<FlowUiNodeAttributesLabel>
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -114,7 +120,8 @@ pub struct FlowUiNodeAttributes {
     pattern: Option<String>,
     required: Option<bool>,
     r#type: Option<String>,
-    label: Option<FlowUiNodeAttributesLabel>
+    label: Option<FlowUiNodeAttributesLabel>,
+    title: Option<FlowUiNodeAttributesLabel>,
 }
 
 fn main() -> color_eyre::Result<()> {

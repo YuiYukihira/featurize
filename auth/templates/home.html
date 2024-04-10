@@ -3,5 +3,5 @@
 {% block content %}
 <h1 class="text-3xl">Home</h1>
 <h2 class="text-xl">You are logged in!</h2>
-<a href="{{logout_url}}">Log out</a>
 {% endblock content %}
+{% block profile %} {% include "profile.html" %} {% endblock profile %}
