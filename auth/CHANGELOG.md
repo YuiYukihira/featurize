@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.2.0](https://github.com/YuiYukihira/featurize/compare/auth-v0.1.0...auth-v0.2.0) (2024-04-11)
+
+
+### Features
+
+* Add dark mode ([bd59d95](https://github.com/YuiYukihira/featurize/commit/bd59d95b10dd4b28564e492e9b14a184563a4035))
+* Add nicer UI for login/registration ([fdc14ae](https://github.com/YuiYukihira/featurize/commit/fdc14aea6b8bf6b1f70c11229e11a1a5bc4d7f1c))
+
+
+### Bug Fixes
+
+* Use labels with inputs ([b424887](https://github.com/YuiYukihira/featurize/commit/b4248872a5ee742968f3cdb24f6d85f483a55a4e))
+
 ## 0.1.0 (2024-04-09)
 
 
