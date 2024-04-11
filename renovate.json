@@ -3,5 +3,8 @@
     "extends": ["config:recommended", ":gitSignOff"],
     "nix": {
         "enabled": true
+    },
+    "lockFileMaintenance": {
+        "enabled": true
     }
 }
