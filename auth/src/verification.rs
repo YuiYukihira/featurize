@@ -17,7 +17,6 @@ use actix_web::{get, web, HttpResponse};
 use sentry::{Hub, SentryFutureExt};
 use serde::{Deserialize, Serialize};
 
-
 use crate::{
     kratos_client::{KratosClient, VerificationFlowRequest},
     renderer::Renderer,

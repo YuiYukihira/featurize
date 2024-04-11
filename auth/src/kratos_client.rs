@@ -13,18 +13,14 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-use std::{fmt::Debug};
+use std::fmt::Debug;
 
 use actix_web::HttpResponse;
 use reqwest::{Method, RequestBuilder, StatusCode};
 use sentry::{Breadcrumb, Hub};
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    error::{AuthError},
-    verification::VerificationFlow,
-    Error, Flow,
-};
+use crate::{error::AuthError, verification::VerificationFlow, Error, Flow};
 
 #[derive(Deserialize)]
 pub struct LogoutUrlResponse {

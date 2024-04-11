@@ -15,6 +15,11 @@
     };
     flake-utils.url = "github:numtide/flake-utils";
     n2c.follows = "std/n2c";
+
+    advisory-db = {
+      url = "github:rustsec/advisory-db";
+      flake = false;
+    };
   };
 
   outputs = { std, ... }@inputs:
@@ -31,6 +36,7 @@
           (std.blockTypes.functions "args")
           (std.blockTypes.containers "containers")
           (std.blockTypes.functions "devshellProfiles")
+          (std.blockTypes.installables "checks")
         ];
       }
       {
@@ -40,5 +46,6 @@
         devShells = std.harvest inputs.self [ [ "_automation" "devshells" ] ];
         devshellProfiles =
           std.harvest inputs.self [ [ "featurize" "devshellProfiles" ] ];
+        checks = std.harvest inputs.self [ [ "auth" "checks" ] ];
       };
 }
