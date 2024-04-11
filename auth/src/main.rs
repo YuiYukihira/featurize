@@ -15,23 +15,21 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 use std::env;
 
-use serde::{Deserialize, Serialize};
 use actix_web::{body::BoxBody, http::StatusCode, web, App, HttpResponse, HttpServer};
+use serde::{Deserialize, Serialize};
 use tera::Tera;
 use tracing_actix_web::TracingLogger;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 use crate::{kratos_client::KratosClient, renderer::Renderer};
 
-
-mod index;
-mod registration;
-mod login;
-mod verification;
 mod error;
-mod renderer;
+mod index;
 mod kratos_client;
-
+mod login;
+mod registration;
+mod renderer;
+mod verification;
 
 pub struct StatusCodeConverter(reqwest::StatusCode);
 
@@ -70,7 +68,7 @@ impl actix_web::ResponseError for Error {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Flow {
     id: String,
-    ui: FlowUi
+    ui: FlowUi,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -95,12 +93,12 @@ pub struct FlowUiNode {
     group: String,
     r#type: String,
     messages: Vec<FlowUiNodeMessages>,
-    meta: FlowUiNodeMeta
+    meta: FlowUiNodeMeta,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct FlowUiNodeMeta {
-    label: Option<FlowUiNodeAttributesLabel>
+    label: Option<FlowUiNodeAttributesLabel>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -137,7 +135,6 @@ fn main() -> color_eyre::Result<()> {
 
     let environment = env::var("ENV").unwrap_or("Dev".to_string());
 
-
     let _guard = sentry::init(sentry::ClientOptions {
         release: sentry::release_name!(),
         send_default_pii: environment == "Dev",
@@ -155,7 +152,6 @@ fn main() -> color_eyre::Result<()> {
 
     Ok(())
 }
-
 
 async fn run_server() -> color_eyre::Result<()> {
     let port = {
@@ -178,9 +174,12 @@ async fn run_server() -> color_eyre::Result<()> {
             .wrap(sentry_actix::Sentry::new())
             .app_data(web::Data::new(Renderer::new(
                 Tera::new(&format!("{}/**/*.html", templates_dir)).unwrap(),
-                sentry_dsn.clone()
+                sentry_dsn.clone(),
             )))
-            .app_data(web::Data::new(KratosClient::new(auth_domain, reqwest::Client::new())))
+            .app_data(web::Data::new(KratosClient::new(
+                auth_domain,
+                reqwest::Client::new(),
+            )))
             .service(index::route)
             .service(registration::route)
             .service(login::route)

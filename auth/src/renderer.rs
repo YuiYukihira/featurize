@@ -37,7 +37,7 @@ pub struct RenderBuilder<'a, S, T> {
     renderer: &'a Renderer,
     context: Context,
     template: S,
-    state: T
+    state: T,
 }
 
 pub struct NoStatusCode;
@@ -51,7 +51,7 @@ impl<'a, S: AsRef<str>> RenderBuilder<'a, S, NoStatusCode> {
             renderer,
             context,
             template: template_name,
-            state: NoStatusCode
+            state: NoStatusCode,
         }
     }
 
@@ -69,8 +69,7 @@ impl<'a, S: AsRef<str>> RenderBuilder<'a, S, NoStatusCode> {
             state: WithStatusCode(status),
             renderer: self.renderer,
             context: self.context,
-            template: self.template
-
+            template: self.template,
         }
     }
 
@@ -90,8 +89,10 @@ impl<'a, S: AsRef<str>> RenderBuilder<'a, S, WithStatusCode> {
         self.renderer
             .tera
             .render(self.template.as_ref(), &self.context)
-            .map(|html| HttpResponse::build(self.state.0)
-            .content_type("text/html")
-            .body(html))
+            .map(|html| {
+                HttpResponse::build(self.state.0)
+                    .content_type("text/html")
+                    .body(html)
+            })
     }
 }

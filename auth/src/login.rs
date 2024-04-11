@@ -17,28 +17,41 @@ use actix_web::{dev::Response, get, http::StatusCode, web, HttpResponse};
 use sentry::{Hub, SentryFutureExt};
 use serde::Deserialize;
 
-use crate::{Error, kratos_client::{KratosClient, LoginBrowser, LoginFlowRequest}, renderer::Renderer};
-
+use crate::{
+    kratos_client::{KratosClient, LoginBrowser, LoginFlowRequest},
+    renderer::Renderer,
+    Error,
+};
 
 #[derive(Deserialize, Debug)]
 pub struct LoginQuery {
-    flow: Option<String>
+    flow: Option<String>,
 }
 
 #[tracing::instrument]
 #[get("/login")]
-pub async fn route(renderer: web::Data<Renderer>, kratos: web::Data<KratosClient>, req: actix_web::HttpRequest, query: web::Query<LoginQuery>) -> Result<HttpResponse, Error> {
+pub async fn route(
+    renderer: web::Data<Renderer>,
+    kratos: web::Data<KratosClient>,
+    req: actix_web::HttpRequest,
+    query: web::Query<LoginQuery>,
+) -> Result<HttpResponse, Error> {
     let hub = Hub::current();
     handler(renderer, kratos, req, query).bind_hub(hub).await
 }
 
 #[tracing::instrument]
-pub async fn handler(renderer: web::Data<Renderer>, kratos: web::Data<KratosClient>, req: actix_web::HttpRequest, query: web::Query<LoginQuery>) -> Result<HttpResponse, Error> {
+pub async fn handler(
+    renderer: web::Data<Renderer>,
+    kratos: web::Data<KratosClient>,
+    req: actix_web::HttpRequest,
+    query: web::Query<LoginQuery>,
+) -> Result<HttpResponse, Error> {
     match &query.flow {
         None => {
             tracing::info!("redirecting to login flow");
             Ok(kratos.redirect(LoginBrowser))
-        },
+        }
         Some(flow_id) => {
             let cookie = match req.headers().get("Cookie") {
                 Some(cookie) => cookie,
@@ -48,25 +61,26 @@ pub async fn handler(renderer: web::Data<Renderer>, kratos: web::Data<KratosClie
                 }
             };
             tracing::info!("getting flow");
-            let res = kratos.new_request(LoginFlowRequest(flow_id.to_string()))
+            let res = kratos
+                .new_request(LoginFlowRequest(flow_id.to_string()))
                 .cookie(cookie.as_bytes())
                 .send()
                 .await?;
 
             match res.body {
-                Ok(res) => {
-                    Ok(renderer
-                        .render("login.html")
-                        .var("flow", &res)
-                        .ok()
-                        .finish()?)
-                },
+                Ok(res) => Ok(renderer
+                    .render("login.html")
+                    .var("flow", &res)
+                    .ok()
+                    .finish()?),
                 Err(err) => {
                     tracing::info!("flow expired! redirecting");
-                   match err.details {
-                       Some(deets) => Ok(HttpResponse::SeeOther().append_header(("Location", deets.redirect_to)).finish()),
-                       None => Ok(kratos.redirect(LoginBrowser))
-                   } 
+                    match err.details {
+                        Some(deets) => Ok(HttpResponse::SeeOther()
+                            .append_header(("Location", deets.redirect_to))
+                            .finish()),
+                        None => Ok(kratos.redirect(LoginBrowser)),
+                    }
                 }
             }
         }

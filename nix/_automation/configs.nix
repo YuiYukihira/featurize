@@ -76,9 +76,18 @@ in
           includes = [ "*.md" ];
           excludes = [ "**/CHANGELOG.md" ];
         };
+        cargo-fmt = {
+          command = "rustfmt";
+          options = [ "--edition" "2021" ];
+          includes = [ "*.rs" ];
+        };
       };
     };
 
-    packages = [ nixpkgs.nixpkgs-fmt nixpkgs.nodePackages.prettier ];
+    packages = [
+      nixpkgs.nixpkgs-fmt
+      nixpkgs.nodePackages.prettier
+      inputs.cells.rust.toolchain.rust
+    ];
   };
 }

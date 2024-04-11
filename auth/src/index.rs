@@ -17,32 +17,39 @@ use actix_web::{get, web, HttpResponse};
 use reqwest::StatusCode;
 use sentry::{Hub, SentryFutureExt};
 
-use crate::{kratos_client::{KratosClient, WhoAmIRequest, LogoutBrowserRequest}, renderer::Renderer, Error};
-
+use crate::{
+    kratos_client::{KratosClient, LogoutBrowserRequest, WhoAmIRequest},
+    renderer::Renderer,
+    Error,
+};
 
 #[tracing::instrument]
 #[get("/")]
-pub async fn route(renderer: web::Data<Renderer>, kratos: web::Data<KratosClient>, req: actix_web::HttpRequest) -> Result<HttpResponse, Error> {
+pub async fn route(
+    renderer: web::Data<Renderer>,
+    kratos: web::Data<KratosClient>,
+    req: actix_web::HttpRequest,
+) -> Result<HttpResponse, Error> {
     let hub = Hub::current();
     handler(renderer, kratos, req).bind_hub(hub).await
 }
 
 #[tracing::instrument]
-pub async fn handler(renderer: web::Data<Renderer>, kratos: web::Data<KratosClient>, req: actix_web::HttpRequest) -> Result<HttpResponse, Error> {
+pub async fn handler(
+    renderer: web::Data<Renderer>,
+    kratos: web::Data<KratosClient>,
+    req: actix_web::HttpRequest,
+) -> Result<HttpResponse, Error> {
+    let cookie = match req.headers().get("Cookie") {
+        Some(cookie) => cookie.as_bytes(),
+        None => {
+            tracing::info!("no cookie, showing public view");
+            return Ok(renderer.render("index.html").ok().finish()?);
+        }
+    };
 
-    let cookie = match req
-        .headers()
-        .get("Cookie") {
-            Some(cookie) => cookie.as_bytes(),
-            None => {
-                tracing::info!("no cookie, showing public view");
-                return Ok(renderer.render("index.html")
-                    .ok()
-                    .finish()?);
-            }
-        };
-
-    let session = kratos.new_request(WhoAmIRequest)
+    let session = kratos
+        .new_request(WhoAmIRequest)
         .cookie(cookie)
         .send()
         .await?;
@@ -50,11 +57,13 @@ pub async fn handler(renderer: web::Data<Renderer>, kratos: web::Data<KratosClie
     let render_builder;
 
     if session.status_code == StatusCode::OK {
-        let logout_url = kratos.new_request(LogoutBrowserRequest)
+        let logout_url = kratos
+            .new_request(LogoutBrowserRequest)
             .cookie(cookie)
             .send()
             .await?;
-        render_builder = renderer.render("home.html")
+        render_builder = renderer
+            .render("home.html")
             .var("logout_url", &logout_url.body.logout_url);
     } else if session.status_code != StatusCode::UNAUTHORIZED {
         render_builder = renderer.render("index.html");

@@ -18,7 +18,11 @@ use sentry::{Hub, SentryFutureExt};
 use serde::Deserialize;
 use tera::Tera;
 
-use crate::{kratos_client::{ErrorsRequest, KratosClient}, renderer::{self, Renderer}, Error, StatusCodeConverter};
+use crate::{
+    kratos_client::{ErrorsRequest, KratosClient},
+    renderer::{self, Renderer},
+    Error, StatusCodeConverter,
+};
 
 #[derive(Deserialize, Debug)]
 pub struct ErrorQuery {
@@ -27,7 +31,7 @@ pub struct ErrorQuery {
 
 #[derive(Deserialize)]
 pub struct AuthError {
-    error: ErrorMessage
+    error: ErrorMessage,
 }
 
 #[derive(Deserialize)]
@@ -39,13 +43,24 @@ pub struct ErrorMessage {
 
 #[tracing::instrument]
 #[get("/error")]
-pub async fn route(renderer: web::Data<Renderer>, kratos: web::Data<KratosClient>, query: web::Query<ErrorQuery>) -> Result<HttpResponse, Error> {
-    handler(renderer, kratos, query).bind_hub(Hub::current()).await
+pub async fn route(
+    renderer: web::Data<Renderer>,
+    kratos: web::Data<KratosClient>,
+    query: web::Query<ErrorQuery>,
+) -> Result<HttpResponse, Error> {
+    handler(renderer, kratos, query)
+        .bind_hub(Hub::current())
+        .await
 }
 
 #[tracing::instrument]
-pub async fn handler(renderer: web::Data<Renderer>, auth_config: web::Data<KratosClient>, query: web::Query<ErrorQuery>) -> Result<HttpResponse, Error> {
-    let error = auth_config.new_request(ErrorsRequest(query.id.clone()))
+pub async fn handler(
+    renderer: web::Data<Renderer>,
+    auth_config: web::Data<KratosClient>,
+    query: web::Query<ErrorQuery>,
+) -> Result<HttpResponse, Error> {
+    let error = auth_config
+        .new_request(ErrorsRequest(query.id.clone()))
         .send()
         .await?;
 

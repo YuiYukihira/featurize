@@ -14,16 +14,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 use actix_web::{get, web, HttpResponse, Responder};
-use sentry::{SentryFutureExt, Hub};
+use sentry::{Hub, SentryFutureExt};
 use serde::{Deserialize, Serialize};
 use tera::Tera;
 
-use crate::{kratos_client::{KratosClient, VerificationFlowRequest}, renderer::Renderer, FlowUiNode, Error};
-
+use crate::{
+    kratos_client::{KratosClient, VerificationFlowRequest},
+    renderer::Renderer,
+    Error, FlowUiNode,
+};
 
 #[derive(Deserialize, Debug)]
 pub struct VerifyQuery {
-    flow: Option<String>
+    flow: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -42,9 +45,8 @@ pub struct VerificationFlowUi {
     action: String,
     messages: Vec<VerificationFlowUiMessage>,
     method: String,
-    nodes: Vec<FlowUiNode>
+    nodes: Vec<FlowUiNode>,
 }
-
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct VerificationFlowUiMessage {
@@ -55,34 +57,49 @@ pub struct VerificationFlowUiMessage {
 
 #[tracing::instrument]
 #[get("/verification")]
-pub async fn route(renderer: web::Data<Renderer>, kratos: web::Data<KratosClient>, req: actix_web::HttpRequest, query: web::Query<VerifyQuery>) -> Result<HttpResponse, Error> {
-    handler(renderer, kratos, req, query).bind_hub(Hub::current()).await
+pub async fn route(
+    renderer: web::Data<Renderer>,
+    kratos: web::Data<KratosClient>,
+    req: actix_web::HttpRequest,
+    query: web::Query<VerifyQuery>,
+) -> Result<HttpResponse, Error> {
+    handler(renderer, kratos, req, query)
+        .bind_hub(Hub::current())
+        .await
 }
 
 fn login_redirect() -> HttpResponse {
-    HttpResponse::SeeOther().append_header(("Location", "/login")).finish()
+    HttpResponse::SeeOther()
+        .append_header(("Location", "/login"))
+        .finish()
 }
 
 #[tracing::instrument]
-pub async fn handler(renderer: web::Data<Renderer>, kratos: web::Data<KratosClient>, req: actix_web::HttpRequest, query: web::Query<VerifyQuery>) -> Result<HttpResponse, Error> {
+pub async fn handler(
+    renderer: web::Data<Renderer>,
+    kratos: web::Data<KratosClient>,
+    req: actix_web::HttpRequest,
+    query: web::Query<VerifyQuery>,
+) -> Result<HttpResponse, Error> {
     match &query.flow {
         None => Ok(login_redirect()),
         Some(flow_id) => {
             let cookie = match req.headers().get("Cookie") {
                 Some(cookie) => cookie,
-                None => return Ok(login_redirect())
+                None => return Ok(login_redirect()),
             };
             tracing::info!("getting flow");
-            let res = kratos.new_request(VerificationFlowRequest(flow_id.to_string()))
+            let res = kratos
+                .new_request(VerificationFlowRequest(flow_id.to_string()))
                 .cookie(cookie.as_bytes())
                 .send()
                 .await?;
 
             Ok(renderer
-               .render("verification.html")
-               .var("flow", &res.body)
-               .ok()
-               .finish()?)
+                .render("verification.html")
+                .var("flow", &res.body)
+                .ok()
+                .finish()?)
         }
     }
 }

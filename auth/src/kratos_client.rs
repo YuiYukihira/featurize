@@ -20,8 +20,11 @@ use reqwest::{Method, RequestBuilder, StatusCode};
 use sentry::{Breadcrumb, Hub};
 use serde::{Deserialize, Serialize};
 
-use crate::{error::{AuthError, ErrorMessage}, verification::VerificationFlow, Error, Flow};
-
+use crate::{
+    error::{AuthError, ErrorMessage},
+    verification::VerificationFlow,
+    Error, Flow,
+};
 
 #[derive(Deserialize)]
 pub struct LogoutUrlResponse {
@@ -62,7 +65,10 @@ pub trait KratosRequestType {
         req
     }
 
-    fn construct_response(status_code: StatusCode, body: serde_json::Value) -> Result<Self::ResponseType, Error> {
+    fn construct_response(
+        status_code: StatusCode,
+        body: serde_json::Value,
+    ) -> Result<Self::ResponseType, Error> {
         Ok(serde_json::from_value(body)?)
     }
 }
@@ -110,10 +116,13 @@ impl KratosRequestType for LoginFlowRequest {
         req.query(&[("id", &self.0)])
     }
 
-    fn construct_response(status_code: StatusCode, body: serde_json::Value) -> Result<Self::ResponseType, Error> {
+    fn construct_response(
+        status_code: StatusCode,
+        body: serde_json::Value,
+    ) -> Result<Self::ResponseType, Error> {
         match status_code {
             StatusCode::GONE => Ok(Err(serde_json::from_value(body)?)),
-            _ => Ok(Ok(serde_json::from_value(body)?))
+            _ => Ok(Ok(serde_json::from_value(body)?)),
         }
     }
 }
@@ -151,7 +160,6 @@ impl KratosRequestType for ErrorsRequest {
     }
 }
 
-
 pub trait KratosRedirectType: Debug {
     const PATH: &'static str;
 
@@ -176,15 +184,12 @@ impl KratosRedirectType for RegistrationBrowser {
 #[derive(Debug)]
 pub struct KratosClient {
     domain: String,
-    client: reqwest::Client
+    client: reqwest::Client,
 }
 
 impl KratosClient {
     pub fn new(domain: String, client: reqwest::Client) -> Self {
-        Self {
-            domain,
-            client
-        }
+        Self { domain, client }
     }
     fn get_url<R: KratosRequestType>(&self, req: &R) -> String {
         format!("{}/{}", self.domain, req.get_url())
@@ -198,7 +203,12 @@ impl KratosClient {
 
     pub fn new_request<R: KratosRequestType>(&self, request: R) -> KratosRequest<R, NoCookie> {
         let req = request.build_req(self.client.request(R::METHOD, self.get_url(&request)));
-        KratosRequest { client: self, request_type: request, _state: NoCookie, req }
+        KratosRequest {
+            client: self,
+            request_type: request,
+            _state: NoCookie,
+            req,
+        }
     }
 }
 
@@ -212,7 +222,7 @@ pub struct KratosRequest<'c, R, S> {
     client: &'c KratosClient,
     request_type: R,
     _state: S,
-    req: reqwest::RequestBuilder
+    req: reqwest::RequestBuilder,
 }
 
 #[derive(Debug)]
@@ -223,7 +233,12 @@ pub struct KratosResponse<R: KratosRequestType> {
 
 impl<'c, R: KratosRequestType<NeedsCookie = Yes>> KratosRequest<'c, R, NoCookie> {
     pub fn cookie(self, cookie: &'c [u8]) -> KratosRequest<R, WithCookie> {
-        KratosRequest { client: self.client, request_type: self.request_type, _state: WithCookie, req: self.req.header("Cookie", cookie) }
+        KratosRequest {
+            client: self.client,
+            request_type: self.request_type,
+            _state: WithCookie,
+            req: self.req.header("Cookie", cookie),
+        }
     }
 }
 
@@ -250,7 +265,7 @@ impl<'c, R: KratosRequestType<NeedsCookie = Yes> + Debug> KratosRequest<'c, R, W
         let body = R::construct_response(status, res_body)?;
         Ok(KratosResponse {
             body,
-            status_code: status
+            status_code: status,
         })
     }
 }
@@ -278,7 +293,7 @@ impl<'c, R: KratosRequestType<NeedsCookie = No> + Debug> KratosRequest<'c, R, No
         let body = R::construct_response(status, res_body)?;
         Ok(KratosResponse {
             body,
-            status_code: status
+            status_code: status,
         })
     }
 }
