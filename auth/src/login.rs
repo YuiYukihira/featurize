@@ -13,7 +13,7 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-use actix_web::{get, web, HttpResponse};
+use actix_web::{dev::Response, get, http::StatusCode, web, HttpResponse};
 use sentry::{Hub, SentryFutureExt};
 use serde::Deserialize;
 
@@ -53,12 +53,23 @@ pub async fn handler(renderer: web::Data<Renderer>, kratos: web::Data<KratosClie
                 .send()
                 .await?;
 
-            let html = renderer
-                .render("login.html")
-                .var("flow", &res.body)
-                .finish()?;
+            match res.body {
+                Ok(res) => {
+                    let html = renderer
+                        .render("login.html")
+                        .var("flow", &res)
+                        .finish()?;
 
-            Ok(HttpResponse::Ok().body(html))
+                    Ok(HttpResponse::Ok().body(html))
+                },
+                Err(err) => {
+                    tracing::info!("flow expired! redirecting");
+                   match err.details {
+                       Some(deets) => Ok(HttpResponse::SeeOther().append_header(("Location", deets.redirect_to)).finish()),
+                       None => Ok(kratos.redirect(LoginBrowser))
+                   } 
+                }
+            }
         }
     }
 }

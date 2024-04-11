@@ -16,9 +16,9 @@
 use std::{fmt::Debug, marker::PhantomData};
 
 use actix_web::HttpResponse;
-use reqwest::{Method, RequestBuilder};
+use reqwest::{Method, RequestBuilder, StatusCode};
 use sentry::{Breadcrumb, Hub};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{error::{AuthError, ErrorMessage}, verification::VerificationFlow, Error, Flow};
 
@@ -28,6 +28,17 @@ pub struct LogoutUrlResponse {
     pub logout_url: String,
 }
 
+#[derive(Deserialize, Serialize)]
+pub struct GenericError<T> {
+    pub code: Option<u64>,
+    pub debug: Option<String>,
+    pub details: Option<T>,
+    pub id: Option<String>,
+    pub message: String,
+    pub reason: Option<String>,
+    pub request: Option<String>,
+    pub status: Option<String>,
+}
 
 pub trait NeedsCookieType {}
 #[derive(Debug)]
@@ -50,6 +61,16 @@ pub trait KratosRequestType {
     fn build_req(&self, req: RequestBuilder) -> RequestBuilder {
         req
     }
+
+    fn construct_response(status_code: StatusCode, body: serde_json::Value) -> Result<Self::ResponseType, Error> {
+        Ok(serde_json::from_value(body)?)
+    }
+}
+
+#[derive(Debug, Deserialize)]
+pub struct LoginFlowError {
+    pub redirect_to: String,
+    pub return_to: String,
 }
 
 #[derive(Debug)]
@@ -82,11 +103,18 @@ impl KratosRequestType for LogoutBrowserRequest {
 impl KratosRequestType for LoginFlowRequest {
     const PATH: &'static str = "self-service/login/flows";
     const METHOD: Method = Method::GET;
-    type ResponseType = Flow;
+    type ResponseType = Result<Flow, GenericError<LoginFlowError>>;
     type NeedsCookie = Yes;
 
     fn build_req(&self, req: RequestBuilder) -> RequestBuilder {
         req.query(&[("id", &self.0)])
+    }
+
+    fn construct_response(status_code: StatusCode, body: serde_json::Value) -> Result<Self::ResponseType, Error> {
+        match status_code {
+            StatusCode::GONE => Ok(Err(serde_json::from_value(body)?)),
+            _ => Ok(Ok(serde_json::from_value(body)?))
+        }
     }
 }
 
@@ -219,7 +247,7 @@ impl<'c, R: KratosRequestType<NeedsCookie = Yes> + Debug> KratosRequest<'c, R, W
             },
             ..Default::default()
         });
-        let body = serde_json::from_value(res_body)?;
+        let body = R::construct_response(status, res_body)?;
         Ok(KratosResponse {
             body,
             status_code: status
@@ -247,7 +275,7 @@ impl<'c, R: KratosRequestType<NeedsCookie = No> + Debug> KratosRequest<'c, R, No
             },
             ..Default::default()
         });
-        let body = serde_json::from_value(res_body)?;
+        let body = R::construct_response(status, res_body)?;
         Ok(KratosResponse {
             body,
             status_code: status
