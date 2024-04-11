@@ -33,6 +33,14 @@ mod renderer;
 mod kratos_client;
 
 
+pub struct StatusCodeConverter(reqwest::StatusCode);
+
+impl From<StatusCodeConverter> for actix_web::http::StatusCode {
+    fn from(value: StatusCodeConverter) -> Self {
+        Self::from_u16(value.0.as_u16()).unwrap()
+    }
+}
+
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[error("error deserializing data")]

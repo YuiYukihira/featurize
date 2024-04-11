@@ -55,12 +55,11 @@ pub async fn handler(renderer: web::Data<Renderer>, kratos: web::Data<KratosClie
 
             match res.body {
                 Ok(res) => {
-                    let html = renderer
+                    Ok(renderer
                         .render("login.html")
                         .var("flow", &res)
-                        .finish()?;
-
-                    Ok(HttpResponse::Ok().body(html))
+                        .ok()
+                        .finish()?)
                 },
                 Err(err) => {
                     tracing::info!("flow expired! redirecting");

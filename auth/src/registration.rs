@@ -54,12 +54,12 @@ pub async fn handler(renderer: web::Data<Renderer>, kratos: web::Data<KratosClie
                 .send()
                 .await?;
 
-            let html = renderer
-                .render("register.html")
-                .var("flow", &res.body)
-                .finish()?;
+            Ok(renderer
+               .render("register.html")
+               .var("flow", &res.body)
+               .ok()
+               .finish()?)
 
-            Ok(HttpResponse::Ok().body(html))
         }
     }
 }

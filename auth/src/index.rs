@@ -36,9 +36,9 @@ pub async fn handler(renderer: web::Data<Renderer>, kratos: web::Data<KratosClie
             Some(cookie) => cookie.as_bytes(),
             None => {
                 tracing::info!("no cookie, showing public view");
-                let html = renderer.render("index.html")
-                    .finish()?;
-                return Ok(HttpResponse::Ok().body(html));
+                return Ok(renderer.render("index.html")
+                    .ok()
+                    .finish()?);
             }
         };
 
@@ -63,6 +63,5 @@ pub async fn handler(renderer: web::Data<Renderer>, kratos: web::Data<KratosClie
         render_builder = renderer.render("index.html");
     }
 
-    let html = render_builder.finish()?;
-    Ok(HttpResponse::Ok().body(html))
+    Ok(render_builder.ok().finish()?)
 }

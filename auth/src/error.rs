@@ -18,7 +18,7 @@ use sentry::{Hub, SentryFutureExt};
 use serde::Deserialize;
 use tera::Tera;
 
-use crate::{kratos_client::{ErrorsRequest, KratosClient}, renderer::{self, Renderer}, Error};
+use crate::{kratos_client::{ErrorsRequest, KratosClient}, renderer::{self, Renderer}, Error, StatusCodeConverter};
 
 #[derive(Deserialize, Debug)]
 pub struct ErrorQuery {
@@ -49,11 +49,10 @@ pub async fn handler(renderer: web::Data<Renderer>, auth_config: web::Data<Krato
         .send()
         .await?;
 
-    let html = renderer
+    Ok(renderer
         .render("error.html")
         .var("msg", &error.body.error.message)
         .var("reason", &error.body.error.reason)
-        .finish()?;
-
-    Ok(HttpResponseBuilder::new(error.body.error.code.try_into().expect("error code was not a valid HTTP status code")).body(html))
+        .status(StatusCodeConverter(error.status_code).into())
+        .finish()?)
 }

@@ -78,12 +78,11 @@ pub async fn handler(renderer: web::Data<Renderer>, kratos: web::Data<KratosClie
                 .send()
                 .await?;
 
-            let html = renderer
-                .render("verification.html")
-                .var("flow", &res.body)
-                .finish()?;
-
-            Ok(HttpResponse::Ok().body(html))
+            Ok(renderer
+               .render("verification.html")
+               .var("flow", &res.body)
+               .ok()
+               .finish()?)
         }
     }
 }
