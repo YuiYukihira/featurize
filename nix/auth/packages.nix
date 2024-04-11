@@ -19,6 +19,7 @@ with cell.args; rec {
         name = "data";
         src = templates;
         buildPhase = ''
+          ls -al
           ${nixpkgs.tailwindcss}/bin/tailwindcss -i src/input.css -o public/output.css
         '';
         installPhase = ''
