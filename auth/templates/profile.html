@@ -1,21 +1,32 @@
 <div class="relative group">
   <div
-    class="p-2 z-40 absolute right-0 top-0 bg-pink-50 rounded flex flex-col items-end group-hover:visible group-focus-within:visible invisible opacity-0 group-hover:opacity-100 group-focus-within:opacity-100"
+    class="p-2 z-40 absolute right-0 top-0 bg-pink-50 dark:bg-purple-900 rounded flex flex-col items-end top-[-100vh] group-hover:top-0 group-focus-within:top-0 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100"
   >
     <div
-      class="z-50 w-8 h-8 rounded-full border border-pink-300 group-hover:border-pink-500 group-focus-within:border-pink-500 transition"
+      class="z-50 w-8 h-8 rounded-full border border-pink-500 dark:border-purple-950"
     ></div>
     <div class="pt-2">
       {% if logout_url %}
-      <a class="text-lg hover:text-pink-500" href="{{ logout_url }}">Logout</a>
+      <a
+        class="text-lg hover:text-pink-500 dark:text-white dark:hover:text-purple-500"
+        href="{{ logout_url }}"
+        >Logout</a
+      >
       {% else %}
-      <a class="text-lg hover:text-pink-500" href="/login">Log in</a>
-      <a class="text-lg hover:text-pink-500" href="/registration">Register</a>
+      <a
+        class="text-lg hover:text-pink-500 dark:text-white dark:hover:text-purple-500"
+        href="/login"
+        >Log in</a
+      >
+      <a
+        class="text-lg hover:text-pink-500 dark:text-white dark:hover:text-purple-500"
+        href="/registration"
+        >Register</a
+      >
       {% endif %}
     </div>
   </div>
   <div
-    class="z-30 mt-2 mr-2 w-8 h-8 absolute top-0 right-0 rounded-full border border-pink-300 group-hover:border-pink-500 group-focus-within:border-pink-500 transition"
-      tabindex="0"
+    class="z-30 mt-2 mr-2 w-8 h-8 absolute top-0 right-0 rounded-full border border-pink-300 dark:border-purple-700"
   ></div>
 </div>

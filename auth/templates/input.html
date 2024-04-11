@@ -1,36 +1,45 @@
-{% macro input(label, input) %}
-{% if input.attributes.type == "submit" %}
+{% macro input(label, input) %} {% if input.attributes.type == "submit" %}
 <div class="w-full last:!mt-4">
-    <input type="hidden" name="{{ input.attributes.name }}" value={{ input.attributes.value }} />
-    <div
-        class="relative border rounded w-full bg-white border-pink-300 bg-gradient-to-b from-pink-100 to-pink-200 hover:from-pink-200 hover:to-pink-300"
-    >
+  <input
+    type="hidden"
+    name="{{ input.attributes.name }}"
+    value="{{ input.attributes.value }}"
+  />
+  <div
+    class="relative border rounded w-full bg-white text-pink-500 dark:text-purple-500 border-pink-300 dark:border-purple-900 bg-gradient-to-b from-pink-100 dark:from-purple-200 to-pink-200 dark:to-purple-300 hover:from-pink-200 dark:hover:from-purple-300 hover:to-pink-300 dark:hover:to-purple-400 dark:hover:text-purple-600"
+  >
     <input
-        class="w-full h-full relative group text-pink-500 p-2"
-        type="submit"
-        {% if input.attributes.disabled %} disabled {% endif %}
-        value="{{ label.text }}"
+      class="w-full h-full relative group p-2"
+      type="submit"
+      {%
+      if
+      input.attributes.disabled
+      %}
+      disabled
+      {%
+      endif
+      %}
+      value="{{ label.text }}"
     />
-    </div>
+  </div>
 </div>
 {% else %}
 <div class="w-full last:!mt-4">
-    {% if label %}
-    <label class="text-pink-200"
-        for="{{ input.attributes.name }}"
-    >{{ label.text }}</label>
-    {% endif %}
-    <{{ input.type }}
-        class="border rounded w-full border-pink-200 px-1"
-        id="{{ input.attributes.name }}"
-        name="{{ input.attributes.name }}"
-        {% if label %} placeholder="{{ label.text }}" {% endif %}
-        {% if input.attributes.disabled %} disabled {% endif %}
-        type="{{ input.attributes.type }}"
-        {% if input.attributes.value %} value="{{ input.attributes.value }}" {% endif %}
-        {% if input.attributes.autocomplete %} autocomplete="{{ input.attributes.autocomplete }}" {% endif %}
-        {% if input.attributes.required %} required="{{ input.attributes.required }}" {% endif %}
-    />
+  {% if label %}
+  <label
+    class="text-pink-200 dark:text-purple-200"
+    for="{{ input.attributes.name }}"
+    >{{ label.text }}</label
+  >
+  {% endif %} <{{ input.type }} class="border rounded w-full border-pink-200
+  dark:border-purple-600 dark:bg-purple-300 dark:text-purple-950
+  dark:placeholder:text-purple-500 px-1" id="{{ input.attributes.name }}"
+  name="{{ input.attributes.name }}" {% if label %} placeholder="{{ label.text
+  }}" {% endif %} {% if input.attributes.disabled %} disabled {% endif %}
+  type="{{ input.attributes.type }}" {% if input.attributes.value %} value="{{
+  input.attributes.value }}" {% endif %} {% if input.attributes.autocomplete %}
+  autocomplete="{{ input.attributes.autocomplete }}" {% endif %} {% if
+  input.attributes.required %} required="{{ input.attributes.required }}" {%
+  endif %} />
 </div>
-{% endif %}
-{% endmacro input %}
+{% endif %} {% endmacro input %}
