@@ -63,6 +63,7 @@ l.mapAttrs (_: std.lib.dev.mkShell) {
       { package = nixpkgs.deno; }
       { package = nixpkgs.tailwindcss; }
       { package = nixpkgs.flyctl; }
+      { package = nixpkgs.nodePackages.prettier; }
       {
         package = nixpkgs.writeShellScriptBin "deploy" ''
           set -eux
