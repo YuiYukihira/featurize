@@ -13,15 +13,15 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-use actix_web::{get, web, HttpResponse, Responder};
-use sentry::{Breadcrumb, Hub, SentryFutureExt};
+use actix_web::{get, web, HttpResponse};
+use sentry::{Hub, SentryFutureExt};
 use serde::Deserialize;
-use tera::Tera;
+
 
 use crate::{
     kratos_client::{KratosClient, RegistrationBrowser, RegistrationFlowRequest},
     renderer::Renderer,
-    Error, Flow,
+    Error,
 };
 
 #[derive(Deserialize, Debug)]

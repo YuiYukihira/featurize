@@ -13,10 +13,10 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-use actix_web::{get, web, HttpResponse, Responder};
+use actix_web::{get, web, HttpResponse};
 use sentry::{Hub, SentryFutureExt};
 use serde::{Deserialize, Serialize};
-use tera::Tera;
+
 
 use crate::{
     kratos_client::{KratosClient, VerificationFlowRequest},

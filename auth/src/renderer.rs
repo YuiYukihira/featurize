@@ -77,6 +77,7 @@ impl<'a, S: AsRef<str>> RenderBuilder<'a, S, NoStatusCode> {
         self.status(StatusCode::OK)
     }
 
+    #[allow(dead_code)]
     pub fn finish(self) -> tera::Result<String> {
         self.renderer
             .tera

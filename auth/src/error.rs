@@ -13,14 +13,14 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-use actix_web::{get, web, HttpResponse, HttpResponseBuilder, Responder};
+use actix_web::{get, web, HttpResponse};
 use sentry::{Hub, SentryFutureExt};
 use serde::Deserialize;
-use tera::Tera;
+
 
 use crate::{
     kratos_client::{ErrorsRequest, KratosClient},
-    renderer::{self, Renderer},
+    renderer::Renderer,
     Error, StatusCodeConverter,
 };
 
@@ -36,7 +36,6 @@ pub struct AuthError {
 
 #[derive(Deserialize)]
 pub struct ErrorMessage {
-    code: u16,
     message: String,
     reason: String,
 }

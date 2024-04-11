@@ -13,7 +13,7 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-use std::{fmt::Debug, marker::PhantomData};
+use std::{fmt::Debug};
 
 use actix_web::HttpResponse;
 use reqwest::{Method, RequestBuilder, StatusCode};
@@ -21,7 +21,7 @@ use sentry::{Breadcrumb, Hub};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    error::{AuthError, ErrorMessage},
+    error::{AuthError},
     verification::VerificationFlow,
     Error, Flow,
 };
@@ -66,7 +66,7 @@ pub trait KratosRequestType {
     }
 
     fn construct_response(
-        status_code: StatusCode,
+        _status_code: StatusCode,
         body: serde_json::Value,
     ) -> Result<Self::ResponseType, Error> {
         Ok(serde_json::from_value(body)?)

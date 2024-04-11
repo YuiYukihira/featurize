@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 use std::env;
 
-use actix_web::{body::BoxBody, http::StatusCode, web, App, HttpResponse, HttpServer};
+use actix_web::{http::StatusCode, web, App, HttpServer};
 use serde::{Deserialize, Serialize};
 use tera::Tera;
 use tracing_actix_web::TracingLogger;

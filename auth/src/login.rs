@@ -13,7 +13,7 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-use actix_web::{dev::Response, get, http::StatusCode, web, HttpResponse};
+use actix_web::{get, web, HttpResponse};
 use sentry::{Hub, SentryFutureExt};
 use serde::Deserialize;
 
