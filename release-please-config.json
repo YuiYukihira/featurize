@@ -1,7 +1,14 @@
 {
     "release-type": "rust",
     "signoff": "Lucy Ekaterina <lucy@dragnof.pro>",
+    "plugins": [
+        {
+            "type": "cargo-workspace",
+            "merge": false
+        }
+    ],
     "packages": {
+        ".": {},
         "auth": {}
     },
     "seperate-pull-requests": true,
