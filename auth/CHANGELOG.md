@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.3.0](https://github.com/YuiYukihira/featurize/compare/auth-v0.2.0...auth-v0.3.0) (2024-04-12)
+
+
+### Features
+
+* Refresh expired login flows automatically ([79a4d1a](https://github.com/YuiYukihira/featurize/commit/79a4d1ae260162ea81d8c62f9256f9bebc4465eb)), closes [#28](https://github.com/YuiYukihira/featurize/issues/28)
+
+
+### Bug Fixes
+
+* Make pages have html Content-Type ([1e16ef0](https://github.com/YuiYukihira/featurize/commit/1e16ef0fd7e756e8ad89f65bdf5e4097faf54b12))
+
 ## [0.2.0](https://github.com/YuiYukihira/featurize/compare/auth-v0.1.0...auth-v0.2.0) (2024-04-11)
 
 
