@@ -15,23 +15,22 @@ with cell.args; rec {
         (inputs.self + /auth/public)
         (inputs.self + /auth/src/input.css)
       ];
-      data = nixpkgs.stdenv.mkDerivation {
-        name = "data";
-        src = templates;
-        buildPhase = ''
-          ls -al
-          ${nixpkgs.tailwindcss}/bin/tailwindcss -i src/input.css -o public/output.css
-        '';
-        installPhase = ''
-          mkdir -p $out
-          cp -r $src/public $src/templates $out/
-        '';
-      };
       bin = crane.buildPackage (commonArgs // { cargoArtifacts = auth-deps; });
     in
-    nixpkgs.writeShellScriptBin "auth" ''
-      export PUBLIC_DIR="${data}/public"
-      export TEMPLATES_DIR="${data}/templates"
-      ${bin}/bin/auth
-    '';
+    nixpkgs.stdenv.mkDerivation {
+      name = "auth";
+      version = commonArgs.version;
+
+      src = templates;
+
+      buildPhase = ''
+        ${nixpkgs.tailwindcss}/bin/tailwindcss -i src/input.css -o public/output.css
+      '';
+
+      installPhase = ''
+        mkdir -p $out/{bin,share}
+        cp ${bin}/bin/auth $out/bin/auth
+        cp -r {public,templates} $out/share/
+      '';
+    };
 }

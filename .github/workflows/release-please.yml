@@ -10,8 +10,60 @@ jobs:
   release-please:
     name: Release Please
     runs-on: ubuntu-latest
+    outputs:
+      auth--release_created: ${{ steps.release.outputs.auth--release_created }}
+      auth--tag_name: ${{ steps.release.outputs.auth--tag_name }}
     steps:
       - uses: YuiYukihira/release-please-action@ab839026a9b90430d01cb374cb4f5f760fa864b7
+        id: release
         with:
           token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
           config-file: release-please-config.json
+  upload-auth-artifacts:
+    name: Upload Artifacts
+    needs:
+      - release-please
+    if: ${{ needs.release-please.outputs.auth--release_created }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        build:
+          - linux-x86_64
+        include:
+          - build: linux-x86_64
+            os: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cachix/install-nix-action@v26
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: cachix/cachix-action@v14
+        with:
+          name: yuiyukihira
+          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
+      - name: Build
+        run: nix build .#auth
+      - name: Compress
+        run: |
+          mkdir archive
+          cp -r ./result/bin ./result/share archive
+          cd archive
+          zip auth-${{ matrix.build }}.zip -r bin share
+          cd ..
+          mv archive/auth-${{ matrix.build }}.zip .
+      - name: Import Code Signing Key
+        uses: crazy-max/ghaction-import-gpg@v6.1.0
+        with:
+          gpg_private_key: ${{ secrets.CODE_SIGNING_KEY }}
+          passphrase: ${{ secrets.CODE_SIGNING_KEY_PASSPHRASE }}
+          fingerprint: D4AF76DC71DD2433D7D1C261C778323548094482
+      - name: Sign
+        run:
+          gpg --detach-sig --sign --output auth-${{ matrix.build }}.zip.sig
+          auth-${{ matrix.build }}.zip
+      - name: Upload Artifacts
+        run: |
+          gh release upload ${{ needs.release-please.outputs.auth--tag_name }} ./auth-${{ matrix.build }}.zip
+          gh release upload ${{ needs.release-please.outputs.auth--tag_name }} ./auth-${{ matrix.build }}.zip.sig
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
