@@ -13,7 +13,7 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-use std::env;
+use std::{env, sync::Arc};
 
 use actix_web::{http::StatusCode, web, App, HttpServer};
 use serde::{Deserialize, Serialize};
@@ -27,6 +27,7 @@ mod error;
 mod index;
 mod kratos_client;
 mod login;
+mod recovery;
 mod registration;
 mod renderer;
 mod verification;
@@ -43,7 +44,7 @@ impl From<StatusCodeConverter> for actix_web::http::StatusCode {
 pub enum Error {
     #[error("error deserializing data")]
     DeserializationError(#[from] serde_json::Error),
-    #[error("error rendering the template")]
+    #[error("error rendering the template: {0}")]
     RenderingError(#[from] tera::Error),
     #[error("An error fetching data has occured")]
     Reqwest(#[from] reqwest::Error),
@@ -140,6 +141,10 @@ fn main() -> color_eyre::Result<()> {
         send_default_pii: environment == "Dev",
         environment: Some(environment.into()),
         traces_sample_rate: 1.0,
+        #[cfg(debug_assertions)]
+        before_send: Some(Arc::new(|e| Some(e))),
+        #[cfg(debug_assertions)]
+        before_breadcrumb: Some(Arc::new(|e| Some(e))),
         ..Default::default()
     });
 
@@ -185,6 +190,7 @@ async fn run_server() -> color_eyre::Result<()> {
             .service(login::route)
             .service(verification::route)
             .service(error::route)
+            .service(recovery::route)
             .service(
                 actix_files::Files::new("/public", public_dir)
                     .show_files_listing()

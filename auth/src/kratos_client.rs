@@ -87,6 +87,8 @@ pub struct RegistrationFlowRequest(pub String);
 pub struct VerificationFlowRequest(pub String);
 #[derive(Debug)]
 pub struct ErrorsRequest(pub String);
+#[derive(Debug)]
+pub struct RecoveryFlowRequest(pub String);
 
 impl KratosRequestType for WhoAmIRequest {
     const PATH: &'static str = "sessions/whoami";
@@ -156,6 +158,17 @@ impl KratosRequestType for ErrorsRequest {
     }
 }
 
+impl KratosRequestType for RecoveryFlowRequest {
+    const PATH: &'static str = "self-service/recovery/flows";
+    const METHOD: Method = Method::GET;
+    type ResponseType = Flow;
+    type NeedsCookie = Yes;
+
+    fn build_req(&self, req: RequestBuilder) -> RequestBuilder {
+        req.query(&[("id", &self.0)])
+    }
+}
+
 pub trait KratosRedirectType: Debug {
     const PATH: &'static str;
 
@@ -168,6 +181,8 @@ pub trait KratosRedirectType: Debug {
 pub struct LoginBrowser;
 #[derive(Debug)]
 pub struct RegistrationBrowser;
+#[derive(Debug)]
+pub struct RecoveryBrowser;
 
 impl KratosRedirectType for LoginBrowser {
     const PATH: &'static str = "self-service/login/browser";
@@ -175,6 +190,10 @@ impl KratosRedirectType for LoginBrowser {
 
 impl KratosRedirectType for RegistrationBrowser {
     const PATH: &'static str = "self-service/registration/browser";
+}
+
+impl KratosRedirectType for RecoveryBrowser {
+    const PATH: &'static str = "self-service/recovery/browser";
 }
 
 #[derive(Debug)]

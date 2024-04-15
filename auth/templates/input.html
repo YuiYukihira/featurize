@@ -1,15 +1,11 @@
-{% macro input(label, input) %} {% if input.attributes.type == "submit" %}
+{% macro input(label, input) %}{% if input.attributes.type == "submit" %}
 <div class="w-full last:!mt-4">
-  <input
-    type="hidden"
-    name="{{ input.attributes.name }}"
-    value="{{ input.attributes.value }}"
-  />
   <div
     class="relative border rounded w-full bg-white text-pink-500 dark:text-purple-500 border-pink-300 dark:border-purple-900 bg-gradient-to-b from-pink-100 dark:from-purple-200 to-pink-200 dark:to-purple-300 hover:from-pink-200 dark:hover:from-purple-300 hover:to-pink-300 dark:hover:to-purple-400 dark:hover:text-purple-600"
   >
-    <input
-      class="w-full h-full relative group p-2"
+    <button
+      name="{{ input.attributes.name }}"
+      value="{{ input.attributes.value }}"
       type="submit"
       {%
       if
@@ -19,8 +15,9 @@
       {%
       endif
       %}
-      value="{{ label.text }}"
-    />
+    >
+      {{ label.text }}
+    </button>
   </div>
 </div>
 {% else %}
