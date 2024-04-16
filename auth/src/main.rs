@@ -30,6 +30,7 @@ mod login;
 mod recovery;
 mod registration;
 mod renderer;
+mod settings;
 mod verification;
 
 pub struct StatusCodeConverter(reqwest::StatusCode);
@@ -46,7 +47,7 @@ pub enum Error {
     DeserializationError(#[from] serde_json::Error),
     #[error("error rendering the template: {0}")]
     RenderingError(#[from] tera::Error),
-    #[error("An error fetching data has occured")]
+    #[error("An error fetching data has occured: {0}")]
     Reqwest(#[from] reqwest::Error),
     #[error("Could not read cookie header")]
     CookieToString(#[from] actix_web::http::header::ToStrError),
@@ -191,6 +192,7 @@ async fn run_server() -> color_eyre::Result<()> {
             .service(verification::route)
             .service(error::route)
             .service(recovery::route)
+            .service(settings::route)
             .service(
                 actix_files::Files::new("/public", public_dir)
                     .show_files_listing()

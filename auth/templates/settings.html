@@ -1,0 +1,29 @@
+{% extends "base.html" %} {% import "info.html" as info %} {% import
+"input.html" as input %} {% block title %}Update your account{% endblock title
+%} {% block content %}
+<div class="w-full flex flex-col items-center justify-center">
+  <div class="w-1/2 max-w-md">
+    <h1 class="text-3xl text-white">Update your account!</h1>
+    {% for msg in flow.ui.messages %}
+    <div class="">{{ info::panel(label=msg.text, type=msg.type) }}</div>
+    {% endfor %}
+    <form
+      class="flex flex-col space-y-2"
+      action="{{ flow.ui.action }}"
+      method="{{ flow.ui.method }}"
+    >
+      {%for node in flow.ui.nodes %} {% for msg in node.messages %} {{
+      info::panel(label=msg.text, type=msg.type) }} {% endfor %} {{
+      input::input(label=node.meta.label, input=node) }} {% endfor %}
+    </form>
+    <div class="w-full flex justify-center">
+      <a
+        class="text-pink-200 dark:text-purple-200 hover:text-pink-300 dark:hover:text-purple-300 text-sm"
+        href="/"
+      >
+        Return to Home
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock content %}

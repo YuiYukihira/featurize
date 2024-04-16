@@ -1,9 +1,24 @@
-{% macro input(label, input) %}{% if input.attributes.type == "submit" %}
+{% macro input(label, input) %}{% if input.type == "input" and
+input.attributes.type == "submit" %}
 <div class="w-full last:!mt-4">
   <button
     class="relative p-2 border rounded w-full bg-white text-pink-500 dark:text-purple-500 border-pink-300 dark:border-purple-900 bg-gradient-to-b from-pink-100 dark:from-purple-200 to-pink-200 dark:to-purple-300 hover:from-pink-200 dark:hover:from-purple-300 hover:to-pink-300 dark:hover:to-purple-400 dark:hover:text-purple-600"
+    {%
+    if
+    input.attributes.name
+    %}
     name="{{ input.attributes.name }}"
+    {%
+    endif
+    %}
+    {%
+    if
+    input.attributes.value
+    %}
     value="{{ input.attributes.value }}"
+    {%
+    endif
+    %}
     type="submit"
     {%
     if
@@ -22,18 +37,27 @@
   {% if label %}
   <label
     class="text-pink-200 dark:text-purple-200"
+    {%
+    if
+    input.attributes.name
+    %}
     for="{{ input.attributes.name }}"
+    {%
+    endif
+    %}
     >{{ label.text }}</label
   >
   {% endif %} <{{ input.type }} class="border rounded w-full border-pink-200
   dark:border-purple-600 dark:bg-purple-300 dark:text-purple-950
-  dark:placeholder:text-purple-500 px-1" id="{{ input.attributes.name }}"
-  name="{{ input.attributes.name }}" {% if label %} placeholder="{{ label.text
-  }}" {% endif %} {% if input.attributes.disabled %} disabled {% endif %}
-  type="{{ input.attributes.type }}" {% if input.attributes.value %} value="{{
-  input.attributes.value }}" {% endif %} {% if input.attributes.autocomplete %}
-  autocomplete="{{ input.attributes.autocomplete }}" {% endif %} {% if
-  input.attributes.required %} required="{{ input.attributes.required }}" {%
-  endif %} />
+  dark:placeholder:text-purple-500 px-1" {% if input.attributes.name %} id="{{
+  input.attributes.name }}" name="{{ input.attributes.name }}" {% endif %} {% if
+  label %} placeholder="{{ label.text }}" {% endif %} {% if
+  input.attributes.disabled %} disabled {% endif %} {% if input.attributes.type
+  %} type="{{ input.attributes.type }}" {% endif %} {% if input.attributes.value
+  %} value="{{ input.attributes.value }}" {% endif %} {% if
+  input.attributes.autocomplete %} autocomplete="{{
+  input.attributes.autocomplete }}" {% endif %} {% if input.attributes.required
+  %} required="{{ input.attributes.required }}" {% endif %} {% if
+  input.attributes.src %} src="{{ input.attributes.src }}" {% endif %}/>
 </div>
 {% endif %} {% endmacro input %}
