@@ -15,43 +15,17 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 use actix_web::{get, web, HttpResponse};
 use sentry::{Hub, SentryFutureExt};
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 
 use crate::{
-    kratos_client::{KratosClient, VerificationFlowRequest},
+    kratos_client::{KratosClient, LoginBrowser, VerificationFlowRequest},
     renderer::Renderer,
-    Error, FlowUiNode,
+    Error,
 };
 
 #[derive(Deserialize, Debug)]
 pub struct VerifyQuery {
     flow: Option<String>,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct VerificationFlow {
-    active: String,
-    id: String,
-    request_url: String,
-    return_to: Option<String>,
-    state: Option<String>,
-    r#type: String,
-    ui: VerificationFlowUi,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct VerificationFlowUi {
-    action: String,
-    messages: Vec<VerificationFlowUiMessage>,
-    method: String,
-    nodes: Vec<FlowUiNode>,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct VerificationFlowUiMessage {
-    id: Option<usize>,
-    text: String,
-    r#type: String,
 }
 
 #[tracing::instrument]
@@ -67,12 +41,6 @@ pub async fn route(
         .await
 }
 
-fn login_redirect() -> HttpResponse {
-    HttpResponse::SeeOther()
-        .append_header(("Location", "/login"))
-        .finish()
-}
-
 #[tracing::instrument]
 pub async fn handler(
     renderer: web::Data<Renderer>,
@@ -81,11 +49,11 @@ pub async fn handler(
     query: web::Query<VerifyQuery>,
 ) -> Result<HttpResponse, Error> {
     match &query.flow {
-        None => Ok(login_redirect()),
+        None => Ok(kratos.redirect(LoginBrowser)),
         Some(flow_id) => {
             let cookie = match req.headers().get("Cookie") {
                 Some(cookie) => cookie,
-                None => return Ok(login_redirect()),
+                None => return Ok(kratos.redirect(LoginBrowser)),
             };
             tracing::info!("getting flow");
             let res = kratos

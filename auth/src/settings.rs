@@ -1,91 +1,12 @@
 use actix_web::{get, web, HttpResponse};
-use reqwest::{Method, StatusCode};
 use sentry::{Hub, SentryFutureExt};
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 
 use crate::{
-    kratos_client::{GenericError, KratosClient, KratosRedirectType, KratosRequestType, Yes},
-    renderer::{self, Renderer},
+    kratos_client::{KratosClient, SettingsFlowRequest, SettingsRedirect},
+    renderer::Renderer,
     Error,
 };
-
-#[derive(Debug, Deserialize, Serialize)]
-pub struct SettingsFlow {
-    active: Option<String>,
-    // TODO: continue_with: Vec<ContinueWith>,
-    expires_at: String,
-    id: String,
-    // TODO: identity: Identity
-    issued_at: String,
-    request_url: String,
-    return_to: Option<String>,
-    state: String,
-    r#type: String,
-    ui: UiContainer,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-pub struct UiContainer {
-    action: String,
-    #[serde(default)]
-    messages: Vec<UiText>,
-    method: String,
-    nodes: Vec<UiNode>,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-pub struct UiText {
-    context: Option<serde_json::Value>,
-    id: i64,
-    text: String,
-    r#type: String,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-pub struct UiNode {
-    attributes: serde_json::Value,
-    group: String,
-    #[serde(default)]
-    messages: Vec<UiText>,
-    meta: UiNodeMeta,
-    r#type: String,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-pub struct UiNodeMeta {
-    label: Option<UiText>,
-}
-
-#[derive(Debug)]
-pub struct SettingsFlowRequest(pub String);
-
-impl KratosRequestType for SettingsFlowRequest {
-    const PATH: &'static str = "self-service/settings/flows";
-    const METHOD: Method = Method::GET;
-    type ResponseType = Result<SettingsFlow, GenericError<serde_json::Value>>;
-    type NeedsCookie = Yes;
-
-    fn build_req(&self, req: reqwest::RequestBuilder) -> reqwest::RequestBuilder {
-        req.query(&[("id", &self.0)])
-    }
-
-    fn construct_response(
-        status_code: reqwest::StatusCode,
-        body: serde_json::Value,
-    ) -> Result<Self::ResponseType, crate::Error> {
-        match status_code {
-            StatusCode::GONE => Ok(Err(serde_json::from_value(body)?)),
-            _ => Ok(Ok(serde_json::from_value(body)?)),
-        }
-    }
-}
-
-#[derive(Debug)]
-pub struct SettingsRedirect;
-
-impl KratosRedirectType for SettingsRedirect {
-    const PATH: &'static str = "self-service/settings/browser";
-}
 
 #[derive(Debug, Deserialize)]
 pub struct SettingsQuery {

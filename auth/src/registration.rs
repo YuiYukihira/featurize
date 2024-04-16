@@ -18,7 +18,7 @@ use sentry::{Hub, SentryFutureExt};
 use serde::Deserialize;
 
 use crate::{
-    kratos_client::{KratosClient, RegistrationBrowser, RegistrationFlowRequest},
+    kratos_client::{KratosClient, LoginBrowser, RegistrationBrowser, RegistrationFlowRequest},
     renderer::Renderer,
     Error,
 };
@@ -67,11 +67,17 @@ pub async fn handler(
                 .send()
                 .await?;
 
-            Ok(renderer
-                .render("register.html")
-                .var("flow", &res.body)
-                .ok()
-                .finish()?)
+            match res.body {
+                Ok(res) => Ok(renderer
+                    .render("register.html")
+                    .var("flow", &res)
+                    .ok()
+                    .finish()?),
+                Err(_) => {
+                    tracing::info!("flow expired! redirecting");
+                    Ok(kratos.redirect(LoginBrowser))
+                }
+            }
         }
     }
 }

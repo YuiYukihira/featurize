@@ -20,7 +20,21 @@ use reqwest::{Method, RequestBuilder, StatusCode};
 use sentry::{Breadcrumb, Hub};
 use serde::{Deserialize, Serialize};
 
-use crate::{error::AuthError, verification::VerificationFlow, Error, Flow};
+use crate::{error::AuthError, Error};
+
+mod common;
+mod login;
+mod recovery;
+mod registration;
+mod settings;
+mod verification;
+
+pub use common::*;
+pub use login::*;
+pub use recovery::*;
+pub use registration::*;
+pub use settings::*;
+pub use verification::*;
 
 #[derive(Deserialize)]
 pub struct LogoutUrlResponse {
@@ -69,26 +83,12 @@ pub trait KratosRequestType {
     }
 }
 
-#[derive(Debug, Deserialize)]
-pub struct LoginFlowError {
-    pub redirect_to: String,
-    pub return_to: String,
-}
-
 #[derive(Debug)]
 pub struct WhoAmIRequest;
 #[derive(Debug)]
 pub struct LogoutBrowserRequest;
 #[derive(Debug)]
-pub struct LoginFlowRequest(pub String);
-#[derive(Debug)]
-pub struct RegistrationFlowRequest(pub String);
-#[derive(Debug)]
-pub struct VerificationFlowRequest(pub String);
-#[derive(Debug)]
 pub struct ErrorsRequest(pub String);
-#[derive(Debug)]
-pub struct RecoveryFlowRequest(pub String);
 
 impl KratosRequestType for WhoAmIRequest {
     const PATH: &'static str = "sessions/whoami";
@@ -104,65 +104,11 @@ impl KratosRequestType for LogoutBrowserRequest {
     type NeedsCookie = Yes;
 }
 
-impl KratosRequestType for LoginFlowRequest {
-    const PATH: &'static str = "self-service/login/flows";
-    const METHOD: Method = Method::GET;
-    type ResponseType = Result<Flow, GenericError<LoginFlowError>>;
-    type NeedsCookie = Yes;
-
-    fn build_req(&self, req: RequestBuilder) -> RequestBuilder {
-        req.query(&[("id", &self.0)])
-    }
-
-    fn construct_response(
-        status_code: StatusCode,
-        body: serde_json::Value,
-    ) -> Result<Self::ResponseType, Error> {
-        match status_code {
-            StatusCode::GONE => Ok(Err(serde_json::from_value(body)?)),
-            _ => Ok(Ok(serde_json::from_value(body)?)),
-        }
-    }
-}
-
-impl KratosRequestType for RegistrationFlowRequest {
-    const PATH: &'static str = "self-service/registration/flows";
-    const METHOD: Method = Method::GET;
-    type ResponseType = Flow;
-    type NeedsCookie = Yes;
-
-    fn build_req(&self, req: RequestBuilder) -> RequestBuilder {
-        req.query(&[("id", &self.0)])
-    }
-}
-
-impl KratosRequestType for VerificationFlowRequest {
-    const PATH: &'static str = "self-service/verification/flows";
-    const METHOD: Method = Method::GET;
-    type ResponseType = VerificationFlow;
-    type NeedsCookie = Yes;
-
-    fn build_req(&self, req: RequestBuilder) -> RequestBuilder {
-        req.query(&[("id", &self.0)])
-    }
-}
-
 impl KratosRequestType for ErrorsRequest {
     const PATH: &'static str = "self-service/errors";
     const METHOD: Method = Method::GET;
     type ResponseType = AuthError;
     type NeedsCookie = No;
-
-    fn build_req(&self, req: RequestBuilder) -> RequestBuilder {
-        req.query(&[("id", &self.0)])
-    }
-}
-
-impl KratosRequestType for RecoveryFlowRequest {
-    const PATH: &'static str = "self-service/recovery/flows";
-    const METHOD: Method = Method::GET;
-    type ResponseType = Flow;
-    type NeedsCookie = Yes;
 
     fn build_req(&self, req: RequestBuilder) -> RequestBuilder {
         req.query(&[("id", &self.0)])
@@ -175,25 +121,6 @@ pub trait KratosRedirectType: Debug {
     fn get_url(&self) -> String {
         Self::PATH.to_string()
     }
-}
-
-#[derive(Debug)]
-pub struct LoginBrowser;
-#[derive(Debug)]
-pub struct RegistrationBrowser;
-#[derive(Debug)]
-pub struct RecoveryBrowser;
-
-impl KratosRedirectType for LoginBrowser {
-    const PATH: &'static str = "self-service/login/browser";
-}
-
-impl KratosRedirectType for RegistrationBrowser {
-    const PATH: &'static str = "self-service/registration/browser";
-}
-
-impl KratosRedirectType for RecoveryBrowser {
-    const PATH: &'static str = "self-service/recovery/browser";
 }
 
 #[derive(Debug)]
