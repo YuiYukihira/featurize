@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.4.0](https://github.com/YuiYukihira/featurize/compare/auth-v0.3.0...auth-v0.4.0) (2024-04-16)
+
+
+### Features
+
+* Add basis for settings menu ([#40](https://github.com/YuiYukihira/featurize/issues/40)) ([a78bb12](https://github.com/YuiYukihira/featurize/commit/a78bb120cd0d35cb6914882cb921a1ffc237ec65))
+
+
+### Bug Fixes
+
+* **deps:** update rust crate serde_json to 1.0.116 ([d0ddee7](https://github.com/YuiYukihira/featurize/commit/d0ddee7793334c6cdecf95662277790287daa7ef))
+* **deps:** update rust crate serde_json to 1.0.116 ([#53](https://github.com/YuiYukihira/featurize/issues/53)) ([50ef20c](https://github.com/YuiYukihira/featurize/commit/50ef20c13ef2036edcc6313492e35d23caf04b36))
+
 ## [0.3.0](https://github.com/YuiYukihira/featurize/compare/auth-v0.2.0...auth-v0.3.0) (2024-04-15)
 
 
