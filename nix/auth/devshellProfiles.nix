@@ -51,7 +51,7 @@
         __services.auth-watch = {
           command = "${start-command}/bin/auth";
           enable = cfg.enable;
-          depends = [ "kratos" "mailslurper" "auth-tailwind" ];
+          depends = [ "kratos" "hydra" "mailslurper" "auth-tailwind" ];
         };
 
         __services.auth-tailwind = {

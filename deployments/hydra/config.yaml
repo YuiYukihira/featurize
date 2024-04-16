@@ -1,0 +1,60 @@
+log:
+  format: text
+  level: info
+serve:
+  cookies:
+    domain: dragnof.pro
+    secure: true
+    same_site_mode: Strict
+webfinger:
+  oidc_discovery:
+    supported_claims:
+      - email
+      - username
+    supported_scope:
+      - email
+urls:
+  login: https://auth.dragnof.pro/login
+  registration: https://auth.dragnof.pro/registration
+  consent: https://auth.dragnof.pro/consent
+  logout: https://auth.dragnof.pro/logout
+  post_logout_redirect: https://auth.dragnof.pro/
+  identity_provider:
+    publicUrl: https://kratos.dragnof.pro/public
+    url: https://featurize-kratos.fly.dev:4443/admin
+  self:
+    public: https://hydra.dragnof.pro/
+    admin: https://hydra.dragnof.pro:4445/
+    issuer: https://hydra.dragnof.pro/
+strategies:
+  access_token: opaque
+  jwt:
+    scope_claim: list
+  scope: exact
+ttl:
+  access_token: 1h
+  refresh_token: 720h
+  id_token: 1h
+  auth_code: 10m
+  login_consent_request: 30m
+oauth2:
+  session:
+    encrypt_at_rest: true
+  allowed_top_level_claims:
+    - username
+    - email
+    - user_uuid
+  hashers:
+    bcrypt:
+      cost: 10
+    algorithm: bcrypt
+  client_credentials:
+    default_grant_allowed_scope: false
+  grant:
+    jwt:
+      iat_optional: false
+      max_ttl: 1h
+      jti_optional: false
+sqa:
+  opt_out: true
+version: v2.2.0

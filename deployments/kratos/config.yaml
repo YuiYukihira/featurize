@@ -80,4 +80,6 @@ serve:
             allowed_origins:
                 - https://auth.dragnof.pro/
             enabled: true
+oauth2_provider:
+    url: https://hydra.dragnof.pro/
 version: v0.13.0

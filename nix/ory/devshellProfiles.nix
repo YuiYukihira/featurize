@@ -65,7 +65,7 @@
         __services.hydra = {
           command = "${start-command}/bin/start-hydra";
           enable = cfg.enable;
-          depends = mkIf (cfg.db.host == "nix-service") [ "postgres" ];
+          depends = mkIf (cfg.db.host == "nix-service") [ ];
         };
         services.postgres.dbs = mkIf (cfg.db.host == "nix-service") [{
           name = cfg.db.name;

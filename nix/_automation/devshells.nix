@@ -2,8 +2,7 @@
 let
   inherit (inputs) nixpkgs std;
   l = nixpkgs.lib // builtins;
-in
-l.mapAttrs (_: std.lib.dev.mkShell) {
+in l.mapAttrs (_: std.lib.dev.mkShell) {
   ci = { ... }: {
     name = "featurize cishell";
 
@@ -112,19 +111,64 @@ l.mapAttrs (_: std.lib.dev.mkShell) {
       };
       hydra = {
         enable = true;
-        config.data = {
-          serve.cookies.same_site_mode = "Lax";
-          urls = {
-            self.issuer = "http://127.0.0.1:4444";
-            consent = "http://127.0.0.1:3000/consent";
-            login = "http://127.0.0.1:3000/login";
-            logout = "http://127.0.0.1:3000/logout";
+        config = {
+          log = {
+            format = "text";
+            level = "info";
           };
-          secrets.system = [ "a super duper secret" ];
-
-          oidc.subject_identifiers = {
-            supported_types = [ "pairwise" "public" ];
-            pairwise.salt = "a super duper good salt";
+          serve.cookies = {
+            same_site_mode = "Lax";
+            domain = "localhost";
+            secure = false;
+          };
+          webfinger = {
+            oidc_discovery = {
+              supported_claims = [ "email" "username" ];
+              supported_scope = [ "email" ];
+            };
+          };
+          urls = {
+            self.issuer = "http://localhost:4444";
+            consent = "http://localhost:3000/consent";
+            login = "http://localhost:3000/login";
+            logout = "http://localhost:3000/logout";
+            post_logout_redirect = "http://localhost:3000/";
+            registration = "http://localhost:3000/registration";
+            identity_provider = {
+              publicUrl = "http://localhost:4433";
+              url = "http://localhost:4434";
+            };
+          };
+          strategies = {
+            access_token = "opaque";
+            jwt.scope_claim = "list";
+            scope = "exact";
+          };
+          ttl = {
+            access_token = "10m";
+            refresh_token = "1h";
+            auth_code = "10m";
+            login_consent_request = "30m";
+          };
+          oauth2 = {
+            session.encrypt_at_rest = false;
+            allowed_top_level_claims = [ "username" "email" "user_uuid" ];
+            hashers = {
+              bcrypt.cost = 10;
+              algorithm = "bcrypt";
+            };
+            client_credentials.default_grant_allowed_scope = false;
+            grant.jwt = {
+              iat_optional = false;
+              max_ttl = "1h";
+              jti_optional = false;
+            };
+          };
+          sqa.opt_out = true;
+          version = "v2.2.0";
+          secrets = {
+            system = [ "a super duper secret" ];
+            cookie = [ "a super duper cookie secret" ];
           };
         };
       };
@@ -222,6 +266,7 @@ l.mapAttrs (_: std.lib.dev.mkShell) {
                 "file://${inputs.self}/deployments/kratos/identity.schema.json";
             }];
           };
+          oauth2_provider.url = "http://localhost:4433";
           feature_flags = { use_continue_with_transitions = true; };
         };
       };

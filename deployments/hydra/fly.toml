@@ -1,0 +1,31 @@
+# fly.toml app configuration file generated for featurize-hydra on 2024-04-16T17:10:13Z
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'featurize-hydra'
+primary_region = 'lhr'
+
+[build]
+  image = "oryd/hydra:v2.2.0-distroless"
+
+[http_service]
+  internal_port = 4444
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ['app']
+
+[[vm]]
+  size = 'shared-cpu-1x'
+
+[[files]]
+  local_path = "config.yaml"
+  guest_path = "/config.yaml"
+
+[deploy]
+  release_command = "migrate sql -e --yes"
+
+[experimental]
+  cmd = ["serve", "all", "-c", "/config.yaml"]
