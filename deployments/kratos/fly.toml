@@ -26,6 +26,10 @@ primary_region = 'lhr'
   local_path = "config.yaml"
   guest_path = "/config.yaml"
 
+[[files]]
+  local_path = "identity.schema.json"
+  guest_path = "/identities/identity.schema.json"
+
 [deploy]
   release_command = "migrate sql -e --yes"
 

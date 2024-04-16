@@ -16,10 +16,7 @@ in
       };
       pre-commit = {
         commands = {
-          treefmt = {
-            run =
-              "${nixpkgs.treefmt}/bin/treefmt --fail-on-change {staged_files}";
-          };
+          treefmt = { run = "${nixpkgs.treefmt}/bin/treefmt {staged_files}"; };
         };
       };
     };
