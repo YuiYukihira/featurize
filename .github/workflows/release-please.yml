@@ -14,7 +14,7 @@ jobs:
       auth--release_created: ${{ steps.release.outputs.auth--release_created }}
       auth--tag_name: ${{ steps.release.outputs.auth--tag_name }}
     steps:
-      - uses: YuiYukihira/release-please-action@ab839026a9b90430d01cb374cb4f5f760fa864b7
+      - uses: YuiYukihira/release-please-action@ba675603cae3cfc927c3e51b7ca5e7514c4353fa
         id: release
         with:
           token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
