@@ -17,6 +17,10 @@ l.mapAttrs (_: std.lib.dev.mkShell) {
         pushd "$PRJ_ROOT/deployments/kratos"
         ${nixpkgs.flyctl}/bin/fly deploy
         popd
+        echo "Deploying hydra..."
+        pushd "$PRJ_ROOT/deployments/hydra"
+        ${nixpkgs.flyctl}/bin/fly deploy
+        popd
         echo "Deploying auth..."
         pushd "$PRJ_ROOT/deployments/auth"
         std //auth/containers/auth:load
