@@ -2,18 +2,13 @@
 let
   inherit (inputs) nixpkgs std;
   l = nixpkgs.lib // builtins;
-in l.mapAttrs (_: std.lib.dev.mkShell) {
+in
+l.mapAttrs (_: std.lib.dev.mkShell) {
   ci = { ... }: {
     name = "featurize cishell";
 
-    imports = [
-      std.std.devshellProfiles.default
-      inputs.helpers.devshellProfiles.base
-      inputs.helpers.devshellProfiles.language.rust
-      inputs.helpers.devshellProfiles.language.c
-    ];
-
-    language.rust.packageSet = inputs.cells.rust.toolchain.rust;
+    imports =
+      [ std.std.devshellProfiles.default inputs.helpers.devshellProfiles.base ];
 
     commands = [{
       package = nixpkgs.writeShellScriptBin "deploy" ''
