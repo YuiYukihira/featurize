@@ -219,7 +219,7 @@ l.mapAttrs (_: std.lib.dev.mkShell) {
             schemas = [{
               id = "default";
               url =
-                "https://raw.githubusercontent.com/ory/kratos/master/contrib/quickstart/kratos/email-password/identity.schema.json";
+                "file://${inputs.self}/deployments/kratos/identity.schema.json";
             }];
           };
           feature_flags = { use_continue_with_transitions = true; };
