@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 use std::fmt::Debug;
 
-use actix_web::HttpResponse;
+use actix_web::{HttpResponse, HttpResponseBuilder};
 use reqwest::{Method, RequestBuilder, StatusCode};
 use sentry::{Breadcrumb, Hub};
 use serde::{Deserialize, Serialize};

@@ -265,7 +265,7 @@ l.mapAttrs (_: std.lib.dev.mkShell) {
                 "file://${inputs.self}/deployments/kratos/identity.schema.json";
             }];
           };
-          oauth2_provider.url = "http://localhost:4433";
+          oauth2_provider.url = "http://localhost:4445";
           feature_flags = { use_continue_with_transitions = true; };
         };
       };

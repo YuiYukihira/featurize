@@ -54,8 +54,15 @@ impl KratosRequestType for LoginFlowRequest {
 }
 
 #[derive(Debug)]
-pub struct LoginBrowser;
+pub struct LoginBrowser(pub Option<String>);
 
 impl KratosRedirectType for LoginBrowser {
     const PATH: &'static str = "self-service/login/browser";
+
+    fn get_url(&self) -> String {
+        match &self.0 {
+            Some(login_challenge) => format!("{}?login_challenge={}", Self::PATH, login_challenge),
+            None => Self::PATH.to_string(),
+        }
+    }
 }

@@ -49,11 +49,11 @@ pub async fn handler(
     query: web::Query<VerifyQuery>,
 ) -> Result<HttpResponse, Error> {
     match &query.flow {
-        None => Ok(kratos.redirect(LoginBrowser)),
+        None => Ok(kratos.redirect(LoginBrowser(None))),
         Some(flow_id) => {
             let cookie = match req.headers().get("Cookie") {
                 Some(cookie) => cookie,
-                None => return Ok(kratos.redirect(LoginBrowser)),
+                None => return Ok(kratos.redirect(LoginBrowser(None))),
             };
             tracing::info!("getting flow");
             let res = kratos

@@ -75,7 +75,7 @@ pub async fn handler(
                     .finish()?),
                 Err(_) => {
                     tracing::info!("flow expired! redirecting");
-                    Ok(kratos.redirect(LoginBrowser))
+                    Ok(kratos.redirect(LoginBrowser(None)))
                 }
             }
         }

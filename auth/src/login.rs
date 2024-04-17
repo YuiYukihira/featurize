@@ -26,6 +26,7 @@ use crate::{
 #[derive(Deserialize, Debug)]
 pub struct LoginQuery {
     flow: Option<String>,
+    login_challenge: Option<String>,
 }
 
 #[tracing::instrument]
@@ -50,14 +51,14 @@ pub async fn handler(
     match &query.flow {
         None => {
             tracing::info!("redirecting to login flow");
-            Ok(kratos.redirect(LoginBrowser))
+            Ok(kratos.redirect(LoginBrowser(query.login_challenge.clone())))
         }
         Some(flow_id) => {
             let cookie = match req.headers().get("Cookie") {
                 Some(cookie) => cookie,
                 None => {
                     tracing::error!("No CSRF token found!");
-                    return Ok(kratos.redirect(LoginBrowser));
+                    return Ok(kratos.redirect(LoginBrowser(None)));
                 }
             };
             tracing::info!("getting flow");
@@ -79,7 +80,7 @@ pub async fn handler(
                         Some(deets) => Ok(HttpResponse::SeeOther()
                             .append_header(("Location", deets.redirect_to))
                             .finish()),
-                        None => Ok(kratos.redirect(LoginBrowser)),
+                        None => Ok(kratos.redirect(LoginBrowser(None))),
                     }
                 }
             }
