@@ -516,3 +516,105 @@ impl Future for SessionFut {
         }
     }
 }
+
+#[derive(Debug)]
+pub struct RejectOAuth2ConsentRequest {
+    consent_challenge: String,
+    body: RejectOAuth2ConsentRequestBody,
+}
+
+#[derive(Debug)]
+pub struct RejectOAuth2ConsentRequestBuilder {
+    consent_challenge: String,
+    body: RejectOAuth2ConsentRequestBody,
+}
+
+impl RejectOAuth2ConsentRequest {
+    pub fn new(consent_challenge: String) -> RejectOAuth2ConsentRequestBuilder {
+        RejectOAuth2ConsentRequestBuilder {
+            consent_challenge,
+            body: RejectOAuth2ConsentRequestBody::new(),
+        }
+    }
+}
+
+impl RejectOAuth2ConsentRequestBuilder {
+    pub fn build(self) -> RejectOAuth2ConsentRequest {
+        RejectOAuth2ConsentRequest {
+            consent_challenge: self.consent_challenge,
+            body: self.body,
+        }
+    }
+
+    pub fn error(mut self, error: String) -> Self {
+        self.body = self.body.error(error);
+        self
+    }
+
+    pub fn error_debug(mut self, error_debug: String) -> Self {
+        self.body = self.body.error_debug(error_debug);
+        self
+    }
+
+    pub fn error_description(mut self, error_description: String) -> Self {
+        self.body = self.body.error_description(error_description);
+        self
+    }
+
+    pub fn status_code(mut self, status_code: u64) -> Self {
+        self.body = self.body.status_code(status_code);
+        self
+    }
+}
+
+#[derive(Debug, Serialize)]
+pub struct RejectOAuth2ConsentRequestBody {
+    error: Option<String>,
+    error_debug: Option<String>,
+    error_description: Option<String>,
+    status_code: Option<u64>,
+}
+
+impl RejectOAuth2ConsentRequestBody {
+    pub fn new() -> Self {
+        Self {
+            error: None,
+            error_debug: None,
+            error_description: None,
+            status_code: None,
+        }
+    }
+
+    pub fn error(mut self, error: String) -> Self {
+        self.error = Some(error);
+        self
+    }
+
+    pub fn error_debug(mut self, error_debug: String) -> Self {
+        self.error_debug = Some(error_debug);
+        self
+    }
+
+    pub fn error_description(mut self, error_description: String) -> Self {
+        self.error_description = Some(error_description);
+        self
+    }
+
+    pub fn status_code(mut self, status_code: u64) -> Self {
+        self.status_code = Some(status_code);
+        self
+    }
+}
+
+impl OryRequestType for RejectOAuth2ConsentRequest {
+    const PATH: &'static str = "/oauth2/auth/requests/consent/reject";
+    const METHOD: Method = Method::PUT;
+    type ResponseType = OAuth2RedirectTo;
+    type NeedsCookie = No;
+    type Service = Hydra;
+
+    fn build_req(&self, req: RequestBuilder) -> RequestBuilder {
+        req.query(&[("consent_challenge", &self.consent_challenge)])
+            .json(&self.body)
+    }
+}
