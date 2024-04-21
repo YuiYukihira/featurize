@@ -280,3 +280,66 @@ impl<'c, R: OryRequestType<NeedsCookie = No> + Debug> OryRequest<'c, R, NoCookie
     }
 }
 
+
+impl FromRequest for Session {
+    type Error = Error;
+
+    type Future = SessionFut;
+
+    fn from_request(
+        req: &actix_web::HttpRequest,
+        _payload: &mut actix_web::dev::Payload,
+    ) -> Self::Future {
+        SessionFut {
+            req: req.to_owned(),
+            fut: None,
+        }
+    }
+}
+
+pub struct SessionFut {
+    req: HttpRequest,
+    fut: Option<Pin<Box<dyn Future<Output = Result<KratosResponse<WhoAmIRequest>, Error>>>>>,
+}
+
+impl Future for SessionFut {
+    type Output = Result<Session, Error>;
+
+    fn poll(
+        mut self: std::pin::Pin<&mut Self>,
+        cx: &mut std::task::Context<'_>,
+    ) -> std::task::Poll<Self::Output> {
+        let mut fut = match self.fut.take() {
+            Some(f) => f,
+            None => {
+                let ory = match self.req.app_data::<Data<OryClient>>() {
+                    Some(o) => o.clone(),
+                    None => return Poll::Ready(Err(Error::NoOryClient)),
+                };
+                let cookie = self
+                    .req
+                    .headers()
+                    .get("Cookie")
+                    .ok_or(Error::NoSession)?
+                    .as_bytes()
+                    .to_vec();
+                let f = async move { ory.new_request(WhoAmIRequest).cookie(&cookie).send().await };
+                Box::pin(f)
+            }
+        };
+
+        match fut.as_mut().poll(cx) {
+            Poll::Ready(r) => Poll::Ready(r.and_then(|s| {
+                if s.status_code == StatusCode::OK {
+                    Ok(s.body)
+                } else {
+                    Err(Error::NoSession)
+                }
+            })),
+            Poll::Pending => {
+                self.fut = Some(fut);
+                Poll::Pending
+            }
+        }
+    }
+}

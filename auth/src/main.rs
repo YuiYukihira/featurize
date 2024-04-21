@@ -56,6 +56,8 @@ pub enum Error {
     Csrf(#[from] csrf::Error),
     #[error("Ory client missing")]
     NoOryClient,
+    #[error("No session available")]
+    NoSession,
     #[error("An unknown error has occured")]
     Unknown,
 }
@@ -70,6 +72,7 @@ impl actix_web::ResponseError for Error {
             Error::Csrf(e) => e.status_code(),
             Error::Unknown => StatusCode::INTERNAL_SERVER_ERROR,
             Error::NoOryClient => StatusCode::INTERNAL_SERVER_ERROR,
+            Error::NoSession => StatusCode::UNAUTHORIZED,
         }
     }
 }
