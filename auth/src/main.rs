@@ -21,8 +21,9 @@ use tera::Tera;
 use tracing_actix_web::TracingLogger;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
-use crate::{ory_client::OryClient, renderer::Renderer};
+use crate::{csrf::CsrfService, ory_client::OryClient, renderer::Renderer};
 
+mod csrf;
 mod error;
 mod index;
 mod login;
@@ -51,6 +52,10 @@ pub enum Error {
     Reqwest(#[from] reqwest::Error),
     #[error("Could not read cookie header")]
     CookieToString(#[from] actix_web::http::header::ToStrError),
+    #[error("There was an issue regarding CSRF tokens: {0}")]
+    Csrf(#[from] csrf::Error),
+    #[error("Ory client missing")]
+    NoOryClient,
     #[error("An unknown error has occured")]
     Unknown,
 }
@@ -62,7 +67,9 @@ impl actix_web::ResponseError for Error {
             Error::RenderingError(_) => StatusCode::INTERNAL_SERVER_ERROR,
             Error::Reqwest(_) => StatusCode::INTERNAL_SERVER_ERROR,
             Error::CookieToString(_) => StatusCode::BAD_REQUEST,
+            Error::Csrf(e) => e.status_code(),
             Error::Unknown => StatusCode::INTERNAL_SERVER_ERROR,
+            Error::NoOryClient => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
 }
@@ -175,6 +182,8 @@ async fn run_server() -> color_eyre::Result<()> {
         let templates_dir = env::var("TEMPLATES_DIR").unwrap_or("templates".to_string());
         let public_dir = env::var("PUBLIC_DIR").unwrap_or("public".to_string());
         let sentry_dsn = env::var("SENTRY_DSN").unwrap();
+        let cookie_secret = env::var("COOKIE_SECRET").unwrap();
+        let cookie_domain = env::var("COOKIE_DOMAIN").unwrap();
         App::new()
             .wrap(TracingLogger::default())
             .wrap(sentry_actix::Sentry::new())
@@ -185,6 +194,10 @@ async fn run_server() -> color_eyre::Result<()> {
             .app_data(web::Data::new(OryClient::new(
                 kratos_domain,
                 reqwest::Client::new(),
+            )))
+            .app_data(web::Data::new(CsrfService::new(
+                cookie_secret.into_bytes(),
+                cookie_domain,
             )))
             .service(index::route)
             .service(registration::route)

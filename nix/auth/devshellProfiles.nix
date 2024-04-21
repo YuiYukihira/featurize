@@ -7,6 +7,8 @@
         set -eux
         export SENTRY_DSN="${cfg.sentry_dsn}"
         export KRATOS_DOMAIN="http://localhost:4433"
+        export COOKIE_DOMAIN="localhost"
+        export COOKIE_SECRET="$(tr -dc A-Za-z0-9 </dev/urandom | head -c 32)"
 
         sigint_handler()
         {
@@ -32,8 +34,7 @@
         pushd $PRJ_ROOT/auth
         ${pkgs.tailwindcss}/bin/tailwindcss -i $PRJ_ROOT/auth/src/input.css -o $PRJ_ROOT/auth/public/output.css --watch=always
       '';
-    in
-    {
+    in {
       options.services.auth-watch = {
         enable = mkEnableOption "Enable the service";
         sentry_dsn = mkOption {
