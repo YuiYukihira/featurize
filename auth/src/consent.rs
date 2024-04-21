@@ -1,4 +1,4 @@
-use actix_web::{get, post, put, web, HttpResponse, HttpResponseBuilder};
+use actix_web::{get, post, web, HttpResponse};
 use rand::rngs::StdRng;
 use sentry::{Hub, SentryFutureExt};
 use serde::Deserialize;
@@ -9,7 +9,7 @@ use crate::{
         AcceptOAuth2ConsentRequest, GetOAuth2ConsentRequest, OAuth2ConsentRequest, OryClient,
         RejectOAuth2ConsentRequest, Session,
     },
-    renderer::{self, Renderer},
+    renderer::Renderer,
     Error,
 };
 
@@ -128,20 +128,21 @@ fn create_oauth2_consent_request_session(
     let mut id_token = serde_json::Map::new();
     let access_token = serde_json::Map::new();
 
-    if consent_request.subject.is_some() && grant_scopes.len() > 0 {
-        if grant_scopes.contains(&"email".to_owned()) {
-            id_token.insert(
-                "email".to_owned(),
-                session
-                    .identity
-                    .as_ref()
-                    .expect("Logged in without an identity!")
-                    .traits
-                    .get("email")
-                    .expect("no email!")
-                    .clone(),
-            );
-        }
+    if consent_request.subject.is_some()
+        && !grant_scopes.is_empty()
+        && grant_scopes.contains(&"email".to_owned())
+    {
+        id_token.insert(
+            "email".to_owned(),
+            session
+                .identity
+                .as_ref()
+                .expect("Logged in without an identity!")
+                .traits
+                .get("email")
+                .expect("no email!")
+                .clone(),
+        );
     }
 
     let mut r = serde_json::Map::new();

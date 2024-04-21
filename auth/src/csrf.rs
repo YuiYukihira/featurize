@@ -1,17 +1,17 @@
-use std::{cell::RefCell, future::Ready, ops::Deref, pin::Pin, task::Poll};
+use std::{cell::RefCell, ops::Deref, pin::Pin, task::Poll};
 
 use actix_web::{
     cookie::Cookie,
     http::StatusCode,
     web::{Data, Form, Query},
-    FromRequest, HttpRequest, HttpResponse, HttpResponseBuilder, ResponseError,
+    FromRequest, HttpRequest, HttpResponseBuilder, ResponseError,
 };
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use base64::Engine;
 use futures::{Future, FutureExt};
 use hmac::{Hmac, Mac};
 use rand::{rngs::StdRng, CryptoRng, Fill, RngCore, SeedableRng};
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 use sha2::Sha256;
 
 type HmacSha256 = Hmac<Sha256>;

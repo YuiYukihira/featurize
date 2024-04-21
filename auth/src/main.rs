@@ -154,9 +154,9 @@ fn main() -> color_eyre::Result<()> {
         environment: Some(environment.into()),
         traces_sample_rate: 1.0,
         #[cfg(debug_assertions)]
-        before_send: Some(Arc::new(|e| Some(e))),
+        before_send: Some(Arc::new(Some)),
         #[cfg(debug_assertions)]
-        before_breadcrumb: Some(Arc::new(|e| Some(e))),
+        before_breadcrumb: Some(Arc::new(Some)),
         ..Default::default()
     });
 

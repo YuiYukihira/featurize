@@ -389,7 +389,7 @@ impl AcceptOAuth2ConsentRequestBuilder {
         self
     }
 
-    pub fn build(mut self) -> AcceptOAuth2ConsentRequest {
+    pub fn build(self) -> AcceptOAuth2ConsentRequest {
         AcceptOAuth2ConsentRequest {
             consent_challenge: self.consent_challenge,
             body: AcceptOAuth2ConsentRequestBody {
@@ -399,7 +399,7 @@ impl AcceptOAuth2ConsentRequestBuilder {
                 handled_at: self.handled_at,
                 remember: self.remember,
                 remember_for: self.remember_for,
-                session: self.session.map(|s| serde_json::Value::Object(s)),
+                session: self.session.map(serde_json::Value::Object),
             },
         }
     }
