@@ -182,6 +182,7 @@ async fn run_server() -> color_eyre::Result<()> {
     println!("Starting on: 0.0.0.0:{}", port);
     HttpServer::new(|| {
         let kratos_domain = env::var("KRATOS_DOMAIN").unwrap();
+        let hydra_domain = env::var("HYDRA_DOMAIN").unwrap();
         let templates_dir = env::var("TEMPLATES_DIR").unwrap_or("templates".to_string());
         let public_dir = env::var("PUBLIC_DIR").unwrap_or("public".to_string());
         let sentry_dsn = env::var("SENTRY_DSN").unwrap();
@@ -196,6 +197,7 @@ async fn run_server() -> color_eyre::Result<()> {
             )))
             .app_data(web::Data::new(OryClient::new(
                 kratos_domain,
+                hydra_domain,
                 reqwest::Client::new(),
             )))
             .app_data(web::Data::new(CsrfService::new(

@@ -72,6 +72,13 @@ impl OryServiceType for Kratos {
         &client.kratos_domain
     }
 }
+#[derive(Debug)]
+pub struct Hydra;
+impl OryServiceType for Hydra {
+    fn get_domain(client: &OryClient) -> &str {
+        &client.hydra_domain
+    }
+}
 
 pub trait OryRequestType {
     const PATH: &'static str;
@@ -158,13 +165,15 @@ pub trait KratosRedirectType: Debug {
 #[derive(Debug)]
 pub struct OryClient {
     kratos_domain: String,
+    hydra_domain: String,
     client: Client,
 }
 
 impl OryClient {
-    pub fn new(kratos_domain: String, client: Client) -> Self {
+    pub fn new(kratos_domain: String, hydra_domain: String, client: Client) -> Self {
         Self {
             kratos_domain,
+            hydra_domain,
             client,
         }
     }
@@ -280,6 +289,52 @@ impl<'c, R: OryRequestType<NeedsCookie = No> + Debug> OryRequest<'c, R, NoCookie
     }
 }
 
+#[derive(Debug)]
+pub struct GetOAuth2ConsentRequest(pub String);
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct OAuth2ConsentRequest {
+    pub acr: Option<String>,
+    pub amr: Option<Vec<String>>,
+    pub challenge: String,
+    pub client: Option<OAuth2Client>,
+    pub context: Option<serde_json::Value>,
+    pub login_challenge: Option<String>,
+    pub session_id: Option<String>,
+    pub oidc_context: Option<serde_json::Value>,
+    pub request_url: Option<String>,
+    pub requested_access_token_audience: Option<Vec<String>>,
+    pub requested_scope: Option<Vec<String>>,
+    pub skip: Option<bool>,
+    pub subject: Option<String>,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct OAuth2Client {
+    pub client_id: Option<String>,
+    pub client_name: Option<String>,
+    pub client_uri: Option<String>,
+    pub logo_uri: Option<String>,
+    pub policy_uri: Option<String>,
+    pub skip_consent: Option<bool>,
+    pub skip_logout_consent: Option<bool>,
+}
+
+impl OryRequestType for GetOAuth2ConsentRequest {
+    const PATH: &'static str = "/oauth2/auth/requests/consent";
+
+    const METHOD: Method = Method::GET;
+
+    type ResponseType = OAuth2ConsentRequest;
+
+    type NeedsCookie = No;
+
+    type Service = Hydra;
+
+    fn build_req(&self, req: RequestBuilder) -> RequestBuilder {
+        req.query(&[("consent_challenge", &self.0)])
+    }
+}
 
 impl FromRequest for Session {
     type Error = Error;
