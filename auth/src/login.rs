@@ -18,7 +18,7 @@ use sentry::{Hub, SentryFutureExt};
 use serde::Deserialize;
 
 use crate::{
-    kratos_client::{KratosClient, LoginBrowser, LoginFlowRequest},
+    ory_client::{LoginBrowser, LoginFlowRequest, OryClient},
     renderer::Renderer,
     Error,
 };
@@ -33,36 +33,36 @@ pub struct LoginQuery {
 #[get("/login")]
 pub async fn route(
     renderer: web::Data<Renderer>,
-    kratos: web::Data<KratosClient>,
+    ory: web::Data<OryClient>,
     req: actix_web::HttpRequest,
     query: web::Query<LoginQuery>,
 ) -> Result<HttpResponse, Error> {
     let hub = Hub::current();
-    handler(renderer, kratos, req, query).bind_hub(hub).await
+    handler(renderer, ory, req, query).bind_hub(hub).await
 }
 
 #[tracing::instrument]
 pub async fn handler(
     renderer: web::Data<Renderer>,
-    kratos: web::Data<KratosClient>,
+    ory: web::Data<OryClient>,
     req: actix_web::HttpRequest,
     query: web::Query<LoginQuery>,
 ) -> Result<HttpResponse, Error> {
     match &query.flow {
         None => {
             tracing::info!("redirecting to login flow");
-            Ok(kratos.redirect(LoginBrowser(query.login_challenge.clone())))
+            Ok(ory.redirect(LoginBrowser(query.login_challenge.clone())))
         }
         Some(flow_id) => {
             let cookie = match req.headers().get("Cookie") {
                 Some(cookie) => cookie,
                 None => {
                     tracing::error!("No CSRF token found!");
-                    return Ok(kratos.redirect(LoginBrowser(None)));
+                    return Ok(ory.redirect(LoginBrowser(None)));
                 }
             };
             tracing::info!("getting flow");
-            let res = kratos
+            let res = ory
                 .new_request(LoginFlowRequest(flow_id.to_string()))
                 .cookie(cookie.as_bytes())
                 .send()
@@ -80,7 +80,7 @@ pub async fn handler(
                         Some(deets) => Ok(HttpResponse::SeeOther()
                             .append_header(("Location", deets.redirect_to))
                             .finish()),
-                        None => Ok(kratos.redirect(LoginBrowser(None))),
+                        None => Ok(ory.redirect(LoginBrowser(None))),
                     }
                 }
             }

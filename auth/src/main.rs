@@ -21,12 +21,12 @@ use tera::Tera;
 use tracing_actix_web::TracingLogger;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
-use crate::{kratos_client::KratosClient, renderer::Renderer};
+use crate::{ory_client::OryClient, renderer::Renderer};
 
 mod error;
 mod index;
-mod kratos_client;
 mod login;
+mod ory_client;
 mod recovery;
 mod registration;
 mod renderer;
@@ -43,7 +43,7 @@ impl From<StatusCodeConverter> for actix_web::http::StatusCode {
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
-    #[error("error deserializing data")]
+    #[error("error deserializing data: {0}")]
     DeserializationError(#[from] serde_json::Error),
     #[error("error rendering the template: {0}")]
     RenderingError(#[from] tera::Error),
@@ -171,7 +171,7 @@ async fn run_server() -> color_eyre::Result<()> {
 
     println!("Starting on: 0.0.0.0:{}", port);
     HttpServer::new(|| {
-        let auth_domain = env::var("KRATOS_DOMAIN").unwrap();
+        let kratos_domain = env::var("KRATOS_DOMAIN").unwrap();
         let templates_dir = env::var("TEMPLATES_DIR").unwrap_or("templates".to_string());
         let public_dir = env::var("PUBLIC_DIR").unwrap_or("public".to_string());
         let sentry_dsn = env::var("SENTRY_DSN").unwrap();
@@ -182,8 +182,8 @@ async fn run_server() -> color_eyre::Result<()> {
                 Tera::new(&format!("{}/**/*.html", templates_dir)).unwrap(),
                 sentry_dsn.clone(),
             )))
-            .app_data(web::Data::new(KratosClient::new(
-                auth_domain,
+            .app_data(web::Data::new(OryClient::new(
+                kratos_domain,
                 reqwest::Client::new(),
             )))
             .service(index::route)

@@ -18,7 +18,7 @@ use reqwest::StatusCode;
 use sentry::{Hub, SentryFutureExt};
 
 use crate::{
-    kratos_client::{KratosClient, LogoutBrowserRequest, WhoAmIRequest},
+    ory_client::{LogoutBrowserRequest, OryClient, WhoAmIRequest},
     renderer::Renderer,
     Error,
 };
@@ -27,7 +27,7 @@ use crate::{
 #[get("/")]
 pub async fn route(
     renderer: web::Data<Renderer>,
-    kratos: web::Data<KratosClient>,
+    kratos: web::Data<OryClient>,
     req: actix_web::HttpRequest,
 ) -> Result<HttpResponse, Error> {
     let hub = Hub::current();
@@ -37,7 +37,7 @@ pub async fn route(
 #[tracing::instrument]
 pub async fn handler(
     renderer: web::Data<Renderer>,
-    kratos: web::Data<KratosClient>,
+    kratos: web::Data<OryClient>,
     req: actix_web::HttpRequest,
 ) -> Result<HttpResponse, Error> {
     let cookie = match req.headers().get("Cookie") {

@@ -3,7 +3,7 @@ use sentry::{Hub, SentryFutureExt};
 use serde::Deserialize;
 
 use crate::{
-    kratos_client::{KratosClient, RecoveryBrowser, RecoveryFlowRequest},
+    ory_client::{OryClient, RecoveryBrowser, RecoveryFlowRequest},
     renderer::Renderer,
     Error,
 };
@@ -17,7 +17,7 @@ pub struct RecoveryQuery {
 #[get("/recovery")]
 pub async fn route(
     renderer: web::Data<Renderer>,
-    kratos: web::Data<KratosClient>,
+    kratos: web::Data<OryClient>,
     req: actix_web::HttpRequest,
     query: web::Query<RecoveryQuery>,
 ) -> Result<HttpResponse, Error> {
@@ -28,7 +28,7 @@ pub async fn route(
 #[tracing::instrument]
 async fn handler(
     renderer: web::Data<Renderer>,
-    kratos: web::Data<KratosClient>,
+    kratos: web::Data<OryClient>,
     req: actix_web::HttpRequest,
     query: web::Query<RecoveryQuery>,
 ) -> Result<HttpResponse, Error> {

@@ -13,10 +13,11 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-use std::fmt::Debug;
+use std::{fmt::Debug, pin::Pin, task::Poll};
 
-use actix_web::{HttpResponse, HttpResponseBuilder};
-use reqwest::{Method, RequestBuilder, StatusCode};
+use actix_web::{web::Data, FromRequest, HttpRequest, HttpResponse};
+use futures::Future;
+use reqwest::{Client, Method, RequestBuilder, StatusCode};
 use sentry::{Breadcrumb, Hub};
 use serde::{Deserialize, Serialize};
 
@@ -61,11 +62,23 @@ impl NeedsCookieType for Yes {}
 pub struct No;
 impl NeedsCookieType for No {}
 
-pub trait KratosRequestType {
+pub trait OryServiceType {
+    fn get_domain(client: &OryClient) -> &str;
+}
+#[derive(Debug)]
+pub struct Kratos;
+impl OryServiceType for Kratos {
+    fn get_domain(client: &OryClient) -> &str {
+        &client.kratos_domain
+    }
+}
+
+pub trait OryRequestType {
     const PATH: &'static str;
     const METHOD: Method;
     type ResponseType: for<'de> Deserialize<'de>;
     type NeedsCookie: NeedsCookieType + Debug;
+    type Service: OryServiceType + Debug;
 
     fn get_url(&self) -> String {
         Self::PATH.to_string()
@@ -90,25 +103,44 @@ pub struct LogoutBrowserRequest;
 #[derive(Debug)]
 pub struct ErrorsRequest(pub String);
 
-impl KratosRequestType for WhoAmIRequest {
+impl OryRequestType for WhoAmIRequest {
     const PATH: &'static str = "sessions/whoami";
     const METHOD: Method = Method::GET;
-    type ResponseType = serde_json::Value;
+    type ResponseType = Session;
     type NeedsCookie = Yes;
+    type Service = Kratos;
 }
 
-impl KratosRequestType for LogoutBrowserRequest {
+#[derive(Debug, Deserialize)]
+pub struct Session {
+    pub active: Option<bool>,
+    pub authenticated_at: Option<String>,
+    pub authenticator_assurance_level: Option<String>,
+    pub expires_at: String,
+    pub id: String,
+    pub identity: Option<Identity>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct Identity {
+    pub id: String,
+    pub traits: serde_json::Map<String, serde_json::Value>,
+}
+
+impl OryRequestType for LogoutBrowserRequest {
     const PATH: &'static str = "self-service/logout/browser";
     const METHOD: Method = Method::GET;
     type ResponseType = LogoutUrlResponse;
     type NeedsCookie = Yes;
+    type Service = Kratos;
 }
 
-impl KratosRequestType for ErrorsRequest {
+impl OryRequestType for ErrorsRequest {
     const PATH: &'static str = "self-service/errors";
     const METHOD: Method = Method::GET;
     type ResponseType = AuthError;
     type NeedsCookie = No;
+    type Service = Kratos;
 
     fn build_req(&self, req: RequestBuilder) -> RequestBuilder {
         req.query(&[("id", &self.0)])
@@ -124,28 +156,35 @@ pub trait KratosRedirectType: Debug {
 }
 
 #[derive(Debug)]
-pub struct KratosClient {
-    domain: String,
-    client: reqwest::Client,
+pub struct OryClient {
+    kratos_domain: String,
+    client: Client,
 }
 
-impl KratosClient {
-    pub fn new(domain: String, client: reqwest::Client) -> Self {
-        Self { domain, client }
+impl OryClient {
+    pub fn new(kratos_domain: String, client: Client) -> Self {
+        Self {
+            kratos_domain,
+            client,
+        }
     }
-    fn get_url<R: KratosRequestType>(&self, req: &R) -> String {
-        format!("{}/{}", self.domain, req.get_url())
+
+    fn get_url<R: OryRequestType>(&self, req: &R) -> String {
+        format!("{}/{}", <R::Service>::get_domain(self), req.get_url())
     }
 
     pub fn redirect<R: KratosRedirectType>(&self, typ: R) -> HttpResponse {
         HttpResponse::SeeOther()
-            .append_header(("Location", format!("{}/{}", self.domain, typ.get_url())))
+            .append_header((
+                "Location",
+                format!("{}/{}", self.kratos_domain, typ.get_url()),
+            ))
             .finish()
     }
 
-    pub fn new_request<R: KratosRequestType>(&self, request: R) -> KratosRequest<R, NoCookie> {
+    pub fn new_request<R: OryRequestType>(&self, request: R) -> OryRequest<R, NoCookie> {
         let req = request.build_req(self.client.request(R::METHOD, self.get_url(&request)));
-        KratosRequest {
+        OryRequest {
             client: self,
             request_type: request,
             _state: NoCookie,
@@ -160,22 +199,22 @@ pub struct NoCookie;
 pub struct WithCookie;
 
 #[derive(Debug)]
-pub struct KratosRequest<'c, R, S> {
-    client: &'c KratosClient,
+pub struct OryRequest<'c, R, S> {
+    client: &'c OryClient,
     request_type: R,
     _state: S,
-    req: reqwest::RequestBuilder,
+    req: RequestBuilder,
 }
 
 #[derive(Debug)]
-pub struct KratosResponse<R: KratosRequestType> {
+pub struct KratosResponse<R: OryRequestType> {
     pub body: R::ResponseType,
     pub status_code: reqwest::StatusCode,
 }
 
-impl<'c, R: KratosRequestType<NeedsCookie = Yes>> KratosRequest<'c, R, NoCookie> {
-    pub fn cookie(self, cookie: &'c [u8]) -> KratosRequest<R, WithCookie> {
-        KratosRequest {
+impl<'c, R: OryRequestType<NeedsCookie = Yes>> OryRequest<'c, R, NoCookie> {
+    pub fn cookie(self, cookie: &'c [u8]) -> OryRequest<R, WithCookie> {
+        OryRequest {
             client: self.client,
             request_type: self.request_type,
             _state: WithCookie,
@@ -184,7 +223,7 @@ impl<'c, R: KratosRequestType<NeedsCookie = Yes>> KratosRequest<'c, R, NoCookie>
     }
 }
 
-impl<'c, R: KratosRequestType<NeedsCookie = Yes> + Debug> KratosRequest<'c, R, WithCookie> {
+impl<'c, R: OryRequestType<NeedsCookie = Yes> + Debug> OryRequest<'c, R, WithCookie> {
     #[tracing::instrument]
     pub async fn send(self) -> Result<KratosResponse<R>, Error> {
         let url = self.client.get_url(&self.request_type);
@@ -212,14 +251,14 @@ impl<'c, R: KratosRequestType<NeedsCookie = Yes> + Debug> KratosRequest<'c, R, W
     }
 }
 
-impl<'c, R: KratosRequestType<NeedsCookie = No> + Debug> KratosRequest<'c, R, NoCookie> {
+impl<'c, R: OryRequestType<NeedsCookie = No> + Debug> OryRequest<'c, R, NoCookie> {
     #[tracing::instrument]
     pub async fn send(self) -> Result<KratosResponse<R>, Error> {
         let url = self.client.get_url(&self.request_type);
         let method = R::METHOD;
         let res = self.req.send().await?;
         let status = res.status();
-        let res_body: serde_json::Value = res.json().await?;
+        let text = res.text().await?;
         Hub::current().add_breadcrumb(Breadcrumb {
             ty: "http".into(),
             data: {
@@ -227,11 +266,12 @@ impl<'c, R: KratosRequestType<NeedsCookie = No> + Debug> KratosRequest<'c, R, No
                 map.insert("url".into(), url.into());
                 map.insert("method".into(), method.as_str().into());
                 map.insert("status_code".into(), status.as_u16().into());
-                map.insert("body".into(), res_body.clone());
+                map.insert("body".into(), serde_json::Value::String(text.clone()));
                 map
             },
             ..Default::default()
         });
+        let res_body: serde_json::Value = serde_json::from_str(&text)?;
         let body = R::construct_response(status, res_body)?;
         Ok(KratosResponse {
             body,
@@ -239,3 +279,4 @@ impl<'c, R: KratosRequestType<NeedsCookie = No> + Debug> KratosRequest<'c, R, No
         })
     }
 }
+

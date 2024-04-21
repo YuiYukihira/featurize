@@ -1,31 +1,33 @@
-use reqwest::{Method, StatusCode};
+use reqwest::{Method, RequestBuilder, StatusCode};
 use serde::{Deserialize, Serialize};
 
-use super::{GenericError, KratosRedirectType, KratosRequestType, UiContainer, Yes};
+use super::{GenericError, Kratos, KratosRedirectType, OryRequestType, UiContainer, Yes};
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct SettingsFlow {
+pub struct RegistrationFlow {
     active: Option<String>,
     expires_at: String,
     id: String,
     issued_at: String,
+    organization_id: Option<String>,
     request_url: String,
     return_to: Option<String>,
     state: String,
-    r#type: String,
+    transient_payload: Option<serde_json::Value>,
     ui: UiContainer,
 }
 
 #[derive(Debug)]
-pub struct SettingsFlowRequest(pub String);
+pub struct RegistrationFlowRequest(pub String);
 
-impl KratosRequestType for SettingsFlowRequest {
-    const PATH: &'static str = "self-service/settings/flows";
+impl OryRequestType for RegistrationFlowRequest {
+    const PATH: &'static str = "self-service/registration/flows";
     const METHOD: Method = Method::GET;
-    type ResponseType = Result<SettingsFlow, GenericError<serde_json::Value>>;
+    type ResponseType = Result<RegistrationFlow, GenericError<serde_json::Value>>;
     type NeedsCookie = Yes;
+    type Service = Kratos;
 
-    fn build_req(&self, req: reqwest::RequestBuilder) -> reqwest::RequestBuilder {
+    fn build_req(&self, req: RequestBuilder) -> RequestBuilder {
         req.query(&[("id", &self.0)])
     }
 
@@ -41,8 +43,8 @@ impl KratosRequestType for SettingsFlowRequest {
 }
 
 #[derive(Debug)]
-pub struct SettingsRedirect;
+pub struct RegistrationBrowser;
 
-impl KratosRedirectType for SettingsRedirect {
-    const PATH: &'static str = "self-service/settings/browser";
+impl KratosRedirectType for RegistrationBrowser {
+    const PATH: &'static str = "self-service/registration/browser";
 }

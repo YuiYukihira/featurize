@@ -18,7 +18,7 @@ use sentry::{Hub, SentryFutureExt};
 use serde::Deserialize;
 
 use crate::{
-    kratos_client::{ErrorsRequest, KratosClient},
+    ory_client::{ErrorsRequest, OryClient},
     renderer::Renderer,
     Error, StatusCodeConverter,
 };
@@ -43,7 +43,7 @@ pub struct ErrorMessage {
 #[get("/error")]
 pub async fn route(
     renderer: web::Data<Renderer>,
-    kratos: web::Data<KratosClient>,
+    kratos: web::Data<OryClient>,
     query: web::Query<ErrorQuery>,
 ) -> Result<HttpResponse, Error> {
     handler(renderer, kratos, query)
@@ -54,7 +54,7 @@ pub async fn route(
 #[tracing::instrument]
 pub async fn handler(
     renderer: web::Data<Renderer>,
-    auth_config: web::Data<KratosClient>,
+    auth_config: web::Data<OryClient>,
     query: web::Query<ErrorQuery>,
 ) -> Result<HttpResponse, Error> {
     let error = auth_config

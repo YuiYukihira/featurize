@@ -18,7 +18,7 @@ use sentry::{Hub, SentryFutureExt};
 use serde::Deserialize;
 
 use crate::{
-    kratos_client::{KratosClient, LoginBrowser, VerificationFlowRequest},
+    ory_client::{LoginBrowser, OryClient, VerificationFlowRequest},
     renderer::Renderer,
     Error,
 };
@@ -32,11 +32,11 @@ pub struct VerifyQuery {
 #[get("/verification")]
 pub async fn route(
     renderer: web::Data<Renderer>,
-    kratos: web::Data<KratosClient>,
+    ory: web::Data<OryClient>,
     req: actix_web::HttpRequest,
     query: web::Query<VerifyQuery>,
 ) -> Result<HttpResponse, Error> {
-    handler(renderer, kratos, req, query)
+    handler(renderer, ory, req, query)
         .bind_hub(Hub::current())
         .await
 }
@@ -44,19 +44,19 @@ pub async fn route(
 #[tracing::instrument]
 pub async fn handler(
     renderer: web::Data<Renderer>,
-    kratos: web::Data<KratosClient>,
+    ory: web::Data<OryClient>,
     req: actix_web::HttpRequest,
     query: web::Query<VerifyQuery>,
 ) -> Result<HttpResponse, Error> {
     match &query.flow {
-        None => Ok(kratos.redirect(LoginBrowser(None))),
+        None => Ok(ory.redirect(LoginBrowser(None))),
         Some(flow_id) => {
             let cookie = match req.headers().get("Cookie") {
                 Some(cookie) => cookie,
-                None => return Ok(kratos.redirect(LoginBrowser(None))),
+                None => return Ok(ory.redirect(LoginBrowser(None))),
             };
             tracing::info!("getting flow");
-            let res = kratos
+            let res = ory
                 .new_request(VerificationFlowRequest(flow_id.to_string()))
                 .cookie(cookie.as_bytes())
                 .send()

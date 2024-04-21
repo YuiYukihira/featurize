@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::Error;
 
-use super::{GenericError, KratosRedirectType, KratosRequestType, UiContainer, Yes};
+use super::{GenericError, Kratos, KratosRedirectType, OryRequestType, UiContainer, Yes};
 
 #[derive(Debug)]
 pub struct LoginFlowRequest(pub String);
@@ -32,11 +32,12 @@ pub struct LoginFlow {
     updated_at: String,
 }
 
-impl KratosRequestType for LoginFlowRequest {
+impl OryRequestType for LoginFlowRequest {
     const PATH: &'static str = "self-service/login/flows";
     const METHOD: Method = Method::GET;
     type ResponseType = Result<LoginFlow, GenericError<LoginFlowError>>;
     type NeedsCookie = Yes;
+    type Service = Kratos;
 
     fn build_req(&self, req: RequestBuilder) -> RequestBuilder {
         req.query(&[("id", &self.0)])

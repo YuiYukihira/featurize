@@ -18,7 +18,7 @@ use sentry::{Hub, SentryFutureExt};
 use serde::Deserialize;
 
 use crate::{
-    kratos_client::{KratosClient, LoginBrowser, RegistrationBrowser, RegistrationFlowRequest},
+    ory_client::{LoginBrowser, OryClient, RegistrationBrowser, RegistrationFlowRequest},
     renderer::Renderer,
     Error,
 };
@@ -32,7 +32,7 @@ pub struct RegisterQuery {
 #[get("/registration")]
 pub async fn route(
     renderer: web::Data<Renderer>,
-    kratos: web::Data<KratosClient>,
+    kratos: web::Data<OryClient>,
     req: actix_web::HttpRequest,
     query: web::Query<RegisterQuery>,
 ) -> Result<HttpResponse, Error> {
@@ -43,7 +43,7 @@ pub async fn route(
 #[tracing::instrument]
 pub async fn handler(
     renderer: web::Data<Renderer>,
-    kratos: web::Data<KratosClient>,
+    kratos: web::Data<OryClient>,
     req: actix_web::HttpRequest,
     query: web::Query<RegisterQuery>,
 ) -> Result<HttpResponse, Error> {
