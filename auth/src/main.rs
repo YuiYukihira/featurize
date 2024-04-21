@@ -23,6 +23,7 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 use crate::{csrf::CsrfService, ory_client::OryClient, renderer::Renderer};
 
+mod consent;
 mod csrf;
 mod error;
 mod index;
@@ -211,6 +212,8 @@ async fn run_server() -> color_eyre::Result<()> {
             .service(error::route)
             .service(recovery::route)
             .service(settings::route)
+            .service(consent::get_route)
+            .service(consent::post_route)
             .service(
                 actix_files::Files::new("/public", public_dir)
                     .show_files_listing()
