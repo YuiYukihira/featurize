@@ -336,6 +336,124 @@ impl OryRequestType for GetOAuth2ConsentRequest {
     }
 }
 
+#[derive(Debug)]
+pub struct AcceptOAuth2ConsentRequestBuilder {
+    consent_challenge: String,
+    context: Option<serde_json::Map<String, serde_json::Value>>,
+    grant_access_token_audience: Option<Vec<String>>,
+    grant_scope: Option<Vec<String>>,
+    handled_at: Option<String>,
+    remember: Option<bool>,
+    remember_for: Option<i64>,
+    session: Option<serde_json::Map<String, serde_json::Value>>,
+}
+
+impl AcceptOAuth2ConsentRequestBuilder {
+    pub fn consent_challenge(mut self, val: String) -> Self {
+        self.consent_challenge = val;
+        self
+    }
+
+    pub fn context(mut self, val: serde_json::Map<String, serde_json::Value>) -> Self {
+        self.context = Some(val);
+        self
+    }
+
+    pub fn grant_access_token_audience(mut self, val: Vec<String>) -> Self {
+        self.grant_access_token_audience = Some(val);
+        self
+    }
+
+    pub fn grant_scope(mut self, val: Vec<String>) -> Self {
+        self.grant_scope = Some(val);
+        self
+    }
+
+    pub fn handled_at(mut self, val: String) -> Self {
+        self.handled_at = Some(val);
+        self
+    }
+
+    pub fn remember(mut self, val: bool) -> Self {
+        self.remember = Some(val);
+        self
+    }
+
+    pub fn remember_for(mut self, val: i64) -> Self {
+        self.remember_for = Some(val);
+        self
+    }
+
+    pub fn session(mut self, val: serde_json::Map<String, serde_json::Value>) -> Self {
+        self.session = Some(val);
+        self
+    }
+
+    pub fn build(mut self) -> AcceptOAuth2ConsentRequest {
+        AcceptOAuth2ConsentRequest {
+            consent_challenge: self.consent_challenge,
+            body: AcceptOAuth2ConsentRequestBody {
+                context: self.context,
+                grant_access_token_audience: self.grant_access_token_audience,
+                grant_scope: self.grant_scope,
+                handled_at: self.handled_at,
+                remember: self.remember,
+                remember_for: self.remember_for,
+                session: self.session.map(|s| serde_json::Value::Object(s)),
+            },
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct AcceptOAuth2ConsentRequest {
+    consent_challenge: String,
+    body: AcceptOAuth2ConsentRequestBody,
+}
+
+#[derive(Debug, Serialize)]
+pub struct AcceptOAuth2ConsentRequestBody {
+    context: Option<serde_json::Map<String, serde_json::Value>>,
+    grant_access_token_audience: Option<Vec<String>>,
+    grant_scope: Option<Vec<String>>,
+    handled_at: Option<String>,
+    remember: Option<bool>,
+    remember_for: Option<i64>,
+    session: Option<serde_json::Value>,
+}
+
+impl AcceptOAuth2ConsentRequest {
+    pub fn new(consent_challenge: String) -> AcceptOAuth2ConsentRequestBuilder {
+        AcceptOAuth2ConsentRequestBuilder {
+            consent_challenge,
+            context: None,
+            grant_access_token_audience: None,
+            grant_scope: None,
+            handled_at: None,
+            remember: None,
+            remember_for: None,
+            session: None,
+        }
+    }
+}
+
+#[derive(Debug, Deserialize)]
+pub struct OAuth2RedirectTo {
+    pub redirect_to: String,
+}
+
+impl OryRequestType for AcceptOAuth2ConsentRequest {
+    const PATH: &'static str = "/oauth2/auth/requests/consent/accept";
+    const METHOD: Method = Method::PUT;
+    type ResponseType = OAuth2RedirectTo;
+    type NeedsCookie = No;
+    type Service = Hydra;
+
+    fn build_req(&self, req: RequestBuilder) -> RequestBuilder {
+        req.query(&[("consent_challenge", &self.consent_challenge)])
+            .json(&self.body)
+    }
+}
 impl FromRequest for Session {
     type Error = Error;
 
