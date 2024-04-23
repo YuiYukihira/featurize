@@ -32,5 +32,7 @@ with cell.args; rec {
         cp ${bin}/bin/auth $out/bin/auth
         cp -r {public,templates} $out/share/
       '';
+
+      meta.mainProgram = "auth";
     };
 }
