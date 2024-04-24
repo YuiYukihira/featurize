@@ -14,6 +14,7 @@ with cell.args; rec {
         (inputs.self + /auth/templates)
         (inputs.self + /auth/public)
         (inputs.self + /auth/src/input.css)
+        (inputs.self + /auth/tailwind.config.js)
       ];
       bin = crane.buildPackage (commonArgs // { cargoArtifacts = auth-deps; });
     in

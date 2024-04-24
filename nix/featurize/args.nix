@@ -8,23 +8,22 @@ in
 rec {
   crane = craneLib.overrideToolchain inputs.cells.rust.toolchain.rust;
 
-  crateName =
-    crane.crateNameFromCargoToml { cargoToml = "${src}/auth/Cargo.toml"; };
+  crateName = crane.crateNameFromCargoToml { cargoToml = "${src}/Cargo.toml"; };
 
   commonWorkspaceArgs = {
     inherit src;
     inherit (crateName) pname version;
   };
 
-  commonArgs = commonWorkspaceArgs // { cargoExtraArgs = "-p auth"; };
+  commonArgs = commonWorkspaceArgs // { cargoExtraArgs = "-p featurize"; };
 
   src =
     let
       src = std.incl (inputs.self) [
-        (inputs.self + /auth/Cargo.toml)
-        (inputs.self + /auth/src)
+        (inputs.self + /src)
         (inputs.self + /Cargo.toml)
         (inputs.self + /Cargo.lock)
+        (inputs.self + /auth/Cargo.toml)
       ];
       dummyMain = "pub fn main() {}";
     in
@@ -32,9 +31,9 @@ rec {
       name = "src";
       src = src;
       installPhase = ''
-        mkdir -p $out/src/
+        mkdir -p $out/auth/src/
         cp -r * $out/
-        echo "${dummyMain}" > $out/src/main.rs
+        echo "${dummyMain}" > $out/auth/src/main.rs
       '';
     };
 }

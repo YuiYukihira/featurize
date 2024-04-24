@@ -8,14 +8,15 @@ in
 with cell.args; rec {
   auth = cell.packages.auth;
   auth-clippy = crane.cargoClippy (commonArgs // { inherit cargoArtifacts; });
-  auth-fmt = crane.cargoFmt commonArgs;
+  auth-fmt = crane.cargoFmt commonWorkspaceArgs;
   auth-audit = crane.cargoAudit {
     inherit src;
     advisory-db = inputs.advisory-db;
   };
-  auth-nextest = crane.cargoNextest (commonArgs // {
+  auth-nextest = crane.cargoNextest (commonWorkspaceArgs // {
     inherit cargoArtifacts;
     partitions = 1;
     partitionType = "count";
+    cargoNextestExtraArgs = "-p auth";
   });
 }
