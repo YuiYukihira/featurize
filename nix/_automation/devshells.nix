@@ -36,6 +36,12 @@ l.mapAttrs (_: std.lib.dev.mkShell) {
       (std.lib.dev.mkNixago cell.configs.prettier)
       ((std.lib.dev.mkNixago std.lib.cfg.treefmt) cell.configs.treefmt)
       ((std.lib.dev.mkNixago std.lib.cfg.conform) cell.configs.conform)
+      ((std.lib.dev.mkNixago inputs.cells.auth.configs.fly))
+      ((std.lib.dev.mkNixago inputs.cells.ory.configs.kratos-config))
+      ((std.lib.dev.mkNixago inputs.cells.ory.configs.kratos-schema-default))
+      ((std.lib.dev.mkNixago inputs.cells.ory.configs.kratos-fly))
+      ((std.lib.dev.mkNixago inputs.cells.ory.configs.hydra-config))
+      ((std.lib.dev.mkNixago inputs.cells.ory.configs.hydra-fly))
     ];
   };
 
@@ -276,6 +282,12 @@ l.mapAttrs (_: std.lib.dev.mkShell) {
       (std.lib.dev.mkNixago cell.configs.prettier)
       ((std.lib.dev.mkNixago std.lib.cfg.treefmt) cell.configs.treefmt)
       ((std.lib.dev.mkNixago std.lib.cfg.conform) cell.configs.conform)
+      ((std.lib.dev.mkNixago inputs.cells.auth.configs.fly))
+      ((std.lib.dev.mkNixago inputs.cells.ory.configs.kratos-config))
+      ((std.lib.dev.mkNixago inputs.cells.ory.configs.kratos-schema-default))
+      ((std.lib.dev.mkNixago inputs.cells.ory.configs.kratos-fly))
+      ((std.lib.dev.mkNixago inputs.cells.ory.configs.hydra-config))
+      ((std.lib.dev.mkNixago inputs.cells.ory.configs.hydra-fly))
     ];
   };
 }

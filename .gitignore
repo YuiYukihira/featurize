@@ -8,6 +8,13 @@ result
 target/
 
 # nixago: ignore-linked-files
+/deployments/auth/fly.toml
+/deployments/featurize/fly.toml
+/deployments/hydra/fly.toml
+/deployments/hydra/config.yaml
+/deployments/kratos/identity.schema.json
+/deployments/kratos/config.yaml
+/deployments/kratos/fly.toml
 /.conform.yaml
 /.prettierrc
 /lefthook.yml
