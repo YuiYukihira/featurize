@@ -679,6 +679,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "featurize"
+version = "0.1.0"
+dependencies = [
+ "actix-files",
+ "actix-web",
+ "color-eyre",
+ "futures",
+ "reqwest",
+ "sentry",
+ "sentry-actix",
+ "sentry-tracing",
+ "serde",
+ "serde_json",
+ "tera",
+ "thiserror",
+ "tracing",
+ "tracing-actix-web",
+ "tracing-subscriber",
+]
+
+[[package]]
 name = "findshlibs"
 version = "0.10.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"

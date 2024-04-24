@@ -40,12 +40,19 @@
         ];
       }
       {
-        packages =
-          std.harvest inputs.self [ [ "ory" "packages" ] [ "auth" "packages" ] ];
-        apps = std.harvest inputs.self [ [ "auth" "apps" ] ];
+        packages = std.harvest inputs.self [
+          [ "ory" "packages" ]
+          [ "auth" "packages" ]
+          [ "featurize" "packages" ]
+        ];
+        apps =
+          std.harvest inputs.self [ [ "auth" "apps" ] [ "featurize" "apps" ] ];
         devShells = std.harvest inputs.self [ [ "_automation" "devshells" ] ];
         devshellProfiles =
           std.harvest inputs.self [ [ "featurize" "devshellProfiles" ] ];
-        checks = std.harvest inputs.self [ [ "auth" "checks" ] ];
+        checks = std.harvest inputs.self [
+          [ "auth" "checks" ]
+          [ "featurize" "checks" ]
+        ];
       };
 }

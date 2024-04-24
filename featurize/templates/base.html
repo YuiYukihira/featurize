@@ -1,0 +1,31 @@
+<!doctype html>
+<html class="no-js" lang="">
+  <head>
+    {% block head %}
+    <meta charset="utf-8" />
+    <meta http-equiv="x-ua-compatible" content="ie=edge" />
+    <title>{% block title %}{% endblock title} - Featurize</title>
+    <meta name="description" content="" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="/public/output.css" />
+    {% endblock head %}
+  </head>
+  <body class="flex flex-col h-screen w-screen">
+    <div
+      id="header"
+      class="w-full h-12 bg-pink-100 dark:bg-purple-950 flex flex-row justify-between"
+    >
+      <div>
+        <a
+          class="dark:text-purple-300 hover:text-pink-500 dark:hover:text-purple-400"
+          href="/"
+          >Featurize</a
+        >
+      </div>
+      <div>{% block profile %}{% endblock profile %}</div>
+    </div>
+    <div id="content" class="dark:bg-gray-900 grow w-full overflow-auto">
+      {% block content %}{% endblock content %}
+    </div>
+  </body>
+</html>
