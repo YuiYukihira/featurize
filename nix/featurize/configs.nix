@@ -19,6 +19,7 @@ in
 
       env = {
         KRATOS_DOMAIN = "https://kratos.dragnof.pro";
+        HYDRA_DOMAIN = "https://featurize-hydra.interal:4445";
         PORT = "8080";
         RUST_BACKTRACE = "1";
       };

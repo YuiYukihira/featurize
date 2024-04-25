@@ -27,6 +27,11 @@ l.mapAttrs (_: std.lib.dev.mkShell) {
         ${nixpkgs.docker}/bin/docker push registry.fly.io/featurize-auth:${inputs.cells.auth.args.crateName.version}
         ${nixpkgs.flyctl}/bin/fly deploy
         popd
+        echo "Deploying featurize..."
+        pushd "$PRJ_ROOT/deployments/featurize"
+        std //featurize/containers/featurize:load
+        ${nixpkgs.docker}/bin/docker push registry.fly.io/featurize:${inputs.cells.featurize.args.crateName.version}
+        ${nixpkgs.flyctl}/bin/fly deploy
         echo "Done!"
       '';
     }];
@@ -42,6 +47,7 @@ l.mapAttrs (_: std.lib.dev.mkShell) {
       ((std.lib.dev.mkNixago inputs.cells.ory.configs.kratos-fly))
       ((std.lib.dev.mkNixago inputs.cells.ory.configs.hydra-config))
       ((std.lib.dev.mkNixago inputs.cells.ory.configs.hydra-fly))
+      ((std.lib.dev.mkNixago inputs.cells.featurize.configs.fly))
     ];
   };
 
@@ -288,6 +294,7 @@ l.mapAttrs (_: std.lib.dev.mkShell) {
       ((std.lib.dev.mkNixago inputs.cells.ory.configs.kratos-fly))
       ((std.lib.dev.mkNixago inputs.cells.ory.configs.hydra-config))
       ((std.lib.dev.mkNixago inputs.cells.ory.configs.hydra-fly))
+      ((std.lib.dev.mkNixago inputs.cells.featurize.configs.fly))
     ];
   };
 }
