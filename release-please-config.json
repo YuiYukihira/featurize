@@ -8,8 +8,18 @@
         }
     ],
     "packages": {
-        ".": {},
-        "auth": {}
+        ".": {
+            "release-type": "rust",
+            "component": "featurize"
+        },
+        "auth": {
+            "release-type": "rust",
+            "component": "auth"
+        },
+        "featurize": {
+            "release-type": "rust",
+            "component": "featurize"
+        }
     },
     "separate-pull-requests": true,
     "pull-request-title-pattern": "chore${scope}: Release${component} ${version}",
