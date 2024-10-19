@@ -298,7 +298,7 @@ dependencies = [
 
 [[package]]
 name = "auth"
-version = "0.5.0"
+version = "0.5.1"
 dependencies = [
  "actix-files",
  "actix-web",
@@ -679,7 +679,7 @@ dependencies = [
 
 [[package]]
 name = "featurize"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "actix-files",
  "actix-web",
