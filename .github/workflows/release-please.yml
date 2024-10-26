@@ -52,7 +52,7 @@ jobs:
           cd ..
           mv archive/auth-${{ matrix.build }}.zip .
       - name: Import Code Signing Key
-        uses: crazy-max/ghaction-import-gpg@v6.1.0
+        uses: crazy-max/ghaction-import-gpg@v6.2.0
         with:
           gpg_private_key: ${{ secrets.CODE_SIGNING_KEY }}
           passphrase: ${{ secrets.CODE_SIGNING_KEY_PASSPHRASE }}
